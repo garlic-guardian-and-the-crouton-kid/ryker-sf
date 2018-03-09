@@ -7,3 +7,4 @@ https://exports.georeferencer.com/800601167340-2016-11-08T17:20:28.821720Z.tif
 https://exports.georeferencer.com/843354968713-2017-08-29T01:26:30.907535Z.tif
 https://exports.georeferencer.com/955540947436-2015-02-16T17:13:32.689460Z.tif
 https://exports.georeferencer.com/676521919137-2015-05-28T22:57:22.292720Z.tif
+https://exports.georeferencer.com/521705727612-2017-02-20T14:25:19.132722Z.tif
