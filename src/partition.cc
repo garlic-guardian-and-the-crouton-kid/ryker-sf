@@ -1,3 +1,6 @@
+/*
+ * Copyright 2018 Justin Manley and Joseph Bolling.
+ */
 #include "partition.h"
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
@@ -20,15 +23,15 @@ typedef Arrangement_2::Face Face_2;
 // Note: The face must be bounded and should not be fictitious.
 // Its outer boundary circulator should be nonempty.
 Polygon_2 FaceBoundaryToPolygon(const Face_2& face) {
-	std::vector<Point_2> points;
+  std::vector<Point_2> points;
 
   auto iterator_current_edge = face.outer_ccb();
   do {
       points.push_back(iterator_current_edge->source()->point());
       iterator_current_edge++;
   } while (iterator_current_edge != face.outer_ccb());
-	
-	return Polygon_2(points.begin(), points.end());
+
+  return Polygon_2(points.begin(), points.end());
 }
 
 OverlapInfo ComputeOverlaps(std::vector<Polygon_2> images) {
@@ -40,14 +43,20 @@ OverlapInfo ComputeOverlaps(std::vector<Polygon_2> images) {
   // The bool at the (i, j)-th position in this two-dimensional vector indicates
   // whether the ith face overlaps with the jth image.
   std::vector<std::vector<bool>> images_per_face;
-  std::transform(arrangement.faces_begin(), arrangement.faces_end(), std::back_inserter(images_per_face),
+  std::transform(
+          arrangement.faces_begin(),
+          arrangement.faces_end(),
+          std::back_inserter(images_per_face),
     [images, images_per_face](const auto& face) -> std::vector<bool> {
       if (face.is_fictitious() || face.is_unbounded()) {
         return std::vector<bool>(images.size(), false);
       }
       std::vector<bool> face_intersects_image;
-			const Polygon_2 face_polygon = FaceBoundaryToPolygon(face);
-      std::transform(images.begin(), images.end(), std::back_inserter(face_intersects_image),
+      const Polygon_2 face_polygon = FaceBoundaryToPolygon(face);
+      std::transform(
+              images.begin(),
+              images.end(),
+              std::back_inserter(face_intersects_image),
         [face_polygon](const Polygon_2& image) -> bool {
           return CGAL::do_intersect(image, face_polygon);
         });
@@ -59,5 +68,5 @@ OverlapInfo ComputeOverlaps(std::vector<Polygon_2> images) {
   };
 }
 
-}  // partition
-}  // ggck
+}  // namespace partition
+}  // namespace ggck

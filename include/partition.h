@@ -1,8 +1,12 @@
-#ifndef GGCK_PARTITION_H
-#define GGCK_PARTITION_H
+/*
+ * Copyright 2018 Justin Manley and Joseph Bolling.
+ */
+#ifndef INCLUDE_PARTITION_H_
+#define INCLUDE_PARTITION_H_
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Polygon_2.h>
+#include <vector>
 
 namespace ggck {
 namespace partition {
@@ -22,4 +26,4 @@ OverlapInfo ComputeOverlaps(std::vector<Polygon_2> images);
 }  // namespace partition
 }  // namespace ggck
 
-#endif /* GGCK_PARTITION_H */
+#endif  // INCLUDE_PARTITION_H_
