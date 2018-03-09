@@ -74,7 +74,6 @@ int main() {
       }
       std::vector<bool> face_intersects_image;
 			const Polygon_2 face_polygon = FaceBoundaryToPolygon(face);
-			print_polygon(face_polygon);
       std::transform(images.begin(), images.end(), std::back_inserter(face_intersects_image),
         [face_polygon](const Polygon_2& image) -> bool {
           return CGAL::do_intersect(image, face_polygon);
