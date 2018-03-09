@@ -17,5 +17,5 @@ To build and run the partitioning code, run:
 ```
 mkdir -p build
 cd build && cmake .. && make
-./partition
+./reconstruct_3d
 ```

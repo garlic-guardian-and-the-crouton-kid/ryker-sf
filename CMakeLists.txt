@@ -6,11 +6,13 @@ set(CMAKE_CXX_STANDARD 14)
 find_package(CGAL QUIET COMPONENTS Core )
 if ( CGAL_FOUND )
   include( ${CGAL_USE_FILE} )
-  include( CGAL_CreateSingleSourceCGALProgram )
-  create_single_source_cgal_program( "partition.cc" )
+
+  set(SOURCES src/partition.cc src/main.cc)
+
+  add_executable(reconstruct_3d ${SOURCES})
+  target_include_directories(reconstruct_3d PRIVATE include)
+  target_link_libraries(reconstruct_3d ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES})
 else()
-  
     message(STATUS "This program requires the CGAL library, and will not be compiled.")
-  
 endif()
 
