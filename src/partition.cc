@@ -61,7 +61,7 @@ OverlapInfo ComputeOverlaps(const std::vector<image_metadata::ImageMetadata>& im
   }
 
   // The bool at the (i, j)-th position in this two-dimensional vector indicates
-  // whether the ith face overlaps with the jth image.
+  // whether the ith face overlaps with the jth image. 
   std::vector<std::vector<bool>> images_per_face;
   std::transform(
           arrangement.faces_begin(),
@@ -84,8 +84,8 @@ OverlapInfo ComputeOverlaps(const std::vector<image_metadata::ImageMetadata>& im
     });
 
   return OverlapInfo {
-    images_per_face: images_per_face,
-	arrangement: arrangement,
+    images_per_face = images_per_face,
+	arrangement = arrangement,
   };
 }
 
