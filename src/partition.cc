@@ -41,7 +41,7 @@ OverlapInfo ComputeOverlaps(std::vector<Polygon_2> images) {
   }
 
   // The bool at the (i, j)-th position in this two-dimensional vector indicates
-  // whether the ith face overlaps with the jth image.
+  // whether the ith face overlaps with the jth image. 
   std::vector<std::vector<bool>> images_per_face;
   std::transform(
           arrangement.faces_begin(),
@@ -63,8 +63,8 @@ OverlapInfo ComputeOverlaps(std::vector<Polygon_2> images) {
       return face_intersects_image;
     });
 
-  return OverlapInfo {
-    images_per_face: images_per_face,
+  return OverlapInfo{
+    images_per_face = images_per_face
   };
 }
 
