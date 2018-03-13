@@ -12,10 +12,15 @@ else()
   include( ${CGAL_USE_FILE} )
   include_directories( ${OpenCV_INCLUDE_DIRS} )
 
-  set(SOURCES src/partition.cc src/main.cc)
+  set(SOURCES src/partition.cc src/main.cc src/point_match.cc)
 
   add_executable(reconstruct_3d ${SOURCES})
   target_include_directories(reconstruct_3d PRIVATE include)
   target_link_libraries(reconstruct_3d ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES} ${OpenCV_LIBS})
+
+  add_executable(point_matching_tests src/point_match.cc)
+  target_include_directories(point_matching_tests PRIVATE include)
+  target_link_libraries(point_matching_tests ${OpenCV_LIBS})
+  
 endif()
 
