@@ -4,11 +4,15 @@
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Arr_segment_traits_2.h>
 
+#include "gdal.h"
+#include "gdal_priv.h"
+
 #include "partition.h"
+#include "image_metadata.h"
 
 using ggck::partition::OverlapInfo;
 using ggck::partition::ComputeOverlaps;
-using ggck::partition::Matrix;
+using ggck::image_metadata::ImageMetadata;
 
 typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
 typedef CGAL::Arr_segment_traits_2<Kernel> Traits_2;
@@ -47,9 +51,22 @@ const std::vector<Polygon_2> images = {
     }),
 };
 
+const std::vector<std::string> image_paths = {
+	"/home/justin/Downloads/test.tif",
+};
+
 int main() {
-  OverlapInfo overlap = ComputeOverlaps(images);
-  Matrix<bool> images_per_face = overlap.images_per_face;
+  GDALAllRegister();
+
+	std::vector<ImageMetadata> image_metadata;
+	std::transform(image_paths.begin(), image_paths.end(), std::back_inserter(image_metadata),
+			[](const std::string& image_path) {
+				ImageMetadata metadata(image_path);
+				return metadata;
+			});
+
+  OverlapInfo overlap = ComputeOverlaps(image_metadata);
+	std::vector<std::vector<bool>> images_per_face = overlap.images_per_face;
 
   for (int i = 0; i < images_per_face.size(); i++) {
     std::cout << "Images contained in face " << i << ": ";
@@ -60,6 +77,10 @@ int main() {
         std::ostream_iterator<bool>(std::cout, ", "));
     std::cout << std::endl;
   }
+
+//    std::map<int, std::vector<Mask>> masks = ComputeMasks(overlap); 
+
+//   std::cout << "Computed masks for " << masks.size() << " patches of map." << std::endl;
 
   return 0;
 }

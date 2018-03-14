@@ -3,6 +3,8 @@
  */
 #include "partition.h"
 
+#include <math.h>
+
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Arr_segment_traits_2.h>
 #include <CGAL/Polygon_2.h>
@@ -12,13 +14,20 @@
 namespace ggck {
 namespace partition {
 
-typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
-typedef CGAL::Arr_segment_traits_2<Kernel> Traits_2;
+using cv::Point2f;
+using image_metadata::ImageMetadata;
+
+typedef ::CGAL::Exact_predicates_exact_constructions_kernel Kernel;
+typedef ::CGAL::Arr_segment_traits_2<Kernel> Traits_2;
 typedef Traits_2::Point_2 Point_2;
 typedef Traits_2::X_monotone_curve_2 Segment_2;
-typedef CGAL::Arrangement_2<Traits_2> Arrangement_2;
-typedef CGAL::Polygon_2<Kernel> Polygon_2;
+typedef ::CGAL::Arrangement_2<Traits_2> Arrangement_2;
+typedef ::CGAL::Polygon_2<Kernel> Polygon_2;
 typedef Arrangement_2::Face Face_2;
+
+Point_2 RoundToPoint(const Point2f& point) {
+	return Point_2((int) rint(point.x), (int) rint(point.y));
+}
 
 // Note: The face must be bounded and should not be fictitious.
 // Its outer boundary circulator should be nonempty.
@@ -34,7 +43,22 @@ Polygon_2 FaceBoundaryToPolygon(const Face_2& face) {
   return Polygon_2(points.begin(), points.end());
 }
 
-OverlapInfo ComputeOverlaps(std::vector<Polygon_2> images) {
+Polygon_2 GetGeoPolygon(const ImageMetadata& image_metadata) {
+	std::vector<Point_2> vertices;
+	std::transform(image_metadata.GetPixelCornersBegin(), image_metadata.GetPixelCornersEnd(), std::back_inserter(vertices),
+			[image_metadata](const cv::Point2f& corner) {
+				return RoundToPoint(image_metadata.PixelToGeo(corner));
+			});
+  return Polygon_2(vertices.begin(), vertices.end());
+}
+
+OverlapInfo ComputeOverlaps(const std::vector<image_metadata::ImageMetadata>& image_metadata) {
+	std::vector<Polygon_2> images;
+	std::transform(image_metadata.begin(), image_metadata.end(), std::back_inserter(images),
+			[](const ImageMetadata& image_metadata) {
+				return GetGeoPolygon(image_metadata);
+			});
+
   Arrangement_2 arrangement;
   for (auto image = images.begin(); image != images.end(); image++) {
     CGAL::insert(arrangement, image->edges_begin(), image->edges_end());
@@ -64,7 +88,7 @@ OverlapInfo ComputeOverlaps(std::vector<Polygon_2> images) {
     });
 
   return OverlapInfo {
-    images_per_face: images_per_face,
+		images_per_face: images_per_face,
   };
 }
 

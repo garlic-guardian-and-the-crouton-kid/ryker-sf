@@ -6,7 +6,10 @@
 
 #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Polygon_2.h>
-#include <vector>
+
+#include "opencv2/core.hpp"
+
+#include "image_metadata.h"
 
 namespace ggck {
 namespace partition {
@@ -14,14 +17,11 @@ namespace partition {
 typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
 typedef CGAL::Polygon_2<Kernel> Polygon_2;
 
-template<typename T>
-using Matrix = std::vector<std::vector<T>>;
-
 struct OverlapInfo {
-  Matrix<bool> images_per_face;
+	std::vector<std::vector<bool>> images_per_face;
 };
 
-OverlapInfo ComputeOverlaps(std::vector<Polygon_2> images);
+OverlapInfo ComputeOverlaps(const std::vector<image_metadata::ImageMetadata>& images);
 
 }  // namespace partition
 }  // namespace ggck
