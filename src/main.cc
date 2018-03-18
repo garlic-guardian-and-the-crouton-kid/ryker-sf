@@ -27,10 +27,6 @@ typedef Arrangement_2::Face Face_2;
 const std::vector<std::string> image_paths = {
 	"/home/justin/p/rykers-sf/images/512w/001.tif",
 	"/home/justin/p/rykers-sf/images/512w/002.tif",
-	"/home/justin/p/rykers-sf/images/512w/003.tif",
-	"/home/justin/p/rykers-sf/images/512w/004.tif",
-	"/home/justin/p/rykers-sf/images/512w/005.tif",
-	"/home/justin/p/rykers-sf/images/512w/006.tif",
 };
 
 struct CvPolygon {
@@ -45,14 +41,7 @@ CvPolygon CgalToCvPolygon(const ImageMetadata& image_metadata, const Face_2& fac
   auto iterator_current_edge = face.outer_ccb();
   do {
 			Point_2 point = iterator_current_edge->source()->point();
-			// NOTE that we flip the x and y-coordinates here to accommodate the
-			// change in nomenclature from width/height (CGAL) to rows/cols (OpenCV).
-			// The x-dimension (width) corresponds to columns, and the y-dimension
-			// (height) to rows.
-			cv::Point2f p = cv::Point2f(CGAL::to_double(point.y()), CGAL::to_double(point.x()));
-
-			std::cout << image_metadata.GeoToPixel(p) << std::endl;
-
+			cv::Point2f p = cv::Point2f(CGAL::to_double(point.x()), CGAL::to_double(point.y()));
       points.push_back(image_metadata.GeoToPixel(p));
       iterator_current_edge++;
   } while (iterator_current_edge != face.outer_ccb());
@@ -79,6 +68,10 @@ int main() {
   OverlapInfo overlap = ComputeOverlaps(image_metadata);
 	std::vector<std::vector<bool>> images_per_face = overlap.images_per_face;
 
+	auto faces = std::vector<Face_2>(
+			overlap.arrangement.faces_begin(),
+			overlap.arrangement.faces_end());
+
   for (int i = 0; i < images_per_face.size(); i++) {
     std::cout << "Images contained in face " << i << ": ";
     std::vector<bool> faces_bitset = images_per_face[i];
@@ -92,35 +85,41 @@ int main() {
 	std::vector<std::vector<cv::Mat>> masks_per_face;
 	for (int i = 0; i < images_per_face.size(); i++) {
 		std::vector<cv::Mat> masks;
-		for (int j = 0; j < images_per_face[i].size(); j++) {
-			bool image_in_face = images_per_face[i][j];	
-			if (image_in_face) {
-				cv::Size image_size = image_metadata[j].GetSize();
-				cv::Mat mask = cv::Mat::zeros(image_size.height, image_size.width, CV_8U);
-				
-				auto faces = std::vector<Face_2>(
-						overlap.arrangement.faces_begin(),
-						overlap.arrangement.faces_end());
 
-				CvPolygon polygon = CgalToCvPolygon(image_metadata[j], faces[i]);
+		int overlaps = std::count(images_per_face[i].begin(), images_per_face[i].end(), true);
 
-				// TODO: Why is dynamic allocation necessary here?
-				const cv::Point** points = new const cv::Point*[polygon.points.size()];
-				for (int k = 0; k < polygon.points.size(); k++) {
-					points[k] = &polygon.points[k];
+		if (overlaps > 1) {
+			for (int j = 0; j < images_per_face[i].size(); j++) {
+				bool image_in_face = images_per_face[i][j];	
+				if (image_in_face) {
+					cv::Size image_size = image_metadata[j].GetSize();
+					// TODO: We may want to swap the height and width of this matrix, depending
+					// on how OpenCV loads images for matching, etc. If we swap the height and width
+					// of the matrix, then we also need to swap the coordinates of the points in the
+					// mask polygons.
+					cv::Mat mask = cv::Mat::zeros(image_size.width, image_size.height, CV_8U);
+
+					CvPolygon polygon = CgalToCvPolygon(image_metadata[j], faces[i]);
+
+					// TODO: Why is dynamic allocation necessary here?
+					const cv::Point** points = new const cv::Point*[polygon.points.size()];
+					for (int k = 0; k < polygon.points.size(); k++) {
+						points[k] = &polygon.points[k];
+					}
+
+					cv::Scalar color = cv::Scalar(255);
+					cv::fillPoly(mask, points, polygon.npoints, polygon.ncontours, color);
+
+					cv::imshow("Mask demo for face " + std::to_string(i), mask);
+					cv::waitKey(0);
+
+					delete[] points;
+
+					masks.push_back(mask);
 				}
-
-				cv::Scalar color = cv::Scalar(255);
-				cv::fillPoly(mask, points, polygon.npoints, polygon.ncontours, color);
-
-				cv::imshow("Mask demo", mask);
-				cv::waitKey(0);
-
-				delete[] points;
-
-				masks.push_back(mask);
 			}
 		}
+
 		masks_per_face.push_back(masks);
 	}
 	
