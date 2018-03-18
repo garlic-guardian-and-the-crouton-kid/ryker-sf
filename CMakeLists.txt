@@ -25,7 +25,7 @@ else()
 
   add_executable(point_matching_tests src/point_match.cc src/triangulate.cc src/point_match_test.cc)
   target_include_directories(point_matching_tests PRIVATE include)
-  target_link_libraries(point_matching_tests ${OpenCV_LIBS}, ${SBA_LIBS})
+  target_link_libraries(point_matching_tests ${OpenCV_LIBS} ${SBA_LIBS})
   
 endif()
 
