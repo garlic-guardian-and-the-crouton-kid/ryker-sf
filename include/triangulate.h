@@ -5,10 +5,7 @@
 #define INCLUDE_TRIANGULATE_H_
 
 namespace ggck {
-namespace triangulate {
 
-
-} //namespace point_match
 } //namespace ggck
 
 #endif //INCLUDE_POINT_MATCH_H_
