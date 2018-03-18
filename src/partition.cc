@@ -3,12 +3,9 @@
  */
 #include "partition.h"
 
+#include <iostream>
 #include <math.h>
 
-#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
-#include <CGAL/Arr_segment_traits_2.h>
-#include <CGAL/Polygon_2.h>
-#include <CGAL/Arrangement_2.h>
 #include <CGAL/Boolean_set_operations_2.h>
 
 namespace ggck {
@@ -18,10 +15,8 @@ using cv::Point2f;
 using image_metadata::ImageMetadata;
 
 typedef ::CGAL::Exact_predicates_exact_constructions_kernel Kernel;
-typedef ::CGAL::Arr_segment_traits_2<Kernel> Traits_2;
-typedef Traits_2::Point_2 Point_2;
 typedef Traits_2::X_monotone_curve_2 Segment_2;
-typedef ::CGAL::Arrangement_2<Traits_2> Arrangement_2;
+typedef Traits_2::Point_2 Point_2;
 typedef ::CGAL::Polygon_2<Kernel> Polygon_2;
 typedef Arrangement_2::Face Face_2;
 
@@ -47,6 +42,7 @@ Polygon_2 GetGeoPolygon(const ImageMetadata& image_metadata) {
 	std::vector<Point_2> vertices;
 	std::transform(image_metadata.GetPixelCornersBegin(), image_metadata.GetPixelCornersEnd(), std::back_inserter(vertices),
 			[image_metadata](const cv::Point2f& corner) {
+				std::cout << RoundToPoint(image_metadata.PixelToGeo(corner)) << std::endl;
 				return RoundToPoint(image_metadata.PixelToGeo(corner));
 			});
   return Polygon_2(vertices.begin(), vertices.end());
@@ -88,7 +84,8 @@ OverlapInfo ComputeOverlaps(const std::vector<image_metadata::ImageMetadata>& im
     });
 
   return OverlapInfo {
-		images_per_face: images_per_face,
+    images_per_face: images_per_face,
+	arrangement: arrangement,
   };
 }
 

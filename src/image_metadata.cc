@@ -1,5 +1,7 @@
 #include "image_metadata.h"
 
+#include <iostream>
+
 #include "gdal.h"
 #include "gdal_priv.h"
 
@@ -29,11 +31,13 @@ cv::Mat AffineMapMatrix(double* affine_map) {
 }
 
 std::vector<Point2i> GetCorners(int width, int height) {
+	// This list of coordinates MUST be a continuous chain of coordinates winding around the edge of the bounding box.
+	// CGAL connects points in order to form a polygon, and out-of-order coordinates will produce a bowtie shape rather than a rectangle.
 	return std::vector<Point2i>({
 		Point2i(0, 0),
 		Point2i(0, width),
-		Point2i(height, 0),
 		Point2i(height, width),
+		Point2i(height, 0),
 	});
 }
 
@@ -61,8 +65,12 @@ ImageMetadata::ImageMetadata(const std::string& image_filename) {
 		throw std::runtime_error("Expected " + image_filename + " to have an attached GeoTransform.");
 	}
 
-	pixel_corners = GetCorners(dataset->GetRasterXSize(), dataset->GetRasterYSize());
+	size = cv::Size(dataset->GetRasterXSize(), dataset->GetRasterYSize());
+
+	pixel_corners = GetCorners(size.width, size.height);
 	pixels_to_geo_affine_map = AffineMapMatrix(geoTransform);
+
+	std::cout << pixel_corners << std::endl;
 }
 
 ConstCornerIterator ImageMetadata::GetPixelCornersBegin() const {
@@ -81,6 +89,10 @@ cv::Point2f ImageMetadata::GeoToPixel(const Point2f& geo_coords) const {
 
 cv::Point2f ImageMetadata::PixelToGeo(const Point2f& pixel_coords) const {
 	return MatToPoint(pixels_to_geo_affine_map * Homogenize(pixel_coords));
+}
+
+cv::Size ImageMetadata::GetSize() const {
+	return size;
 }
 
 }  // namespace image_metadata

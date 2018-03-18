@@ -22,9 +22,13 @@ class ImageMetadata {
 	cv::Point2f GeoToPixel(const cv::Point2f& geo_coords) const;
 
 	cv::Point2f PixelToGeo(const cv::Point2f& pixel_coords) const;
+
+	cv::Size GetSize() const;
 	
  private:
 	const std::string image_filename;
+
+	cv::Size size;
 
 	// A list of 4 points indicating the corners of the image in pixel coordinates.
 	std::vector<cv::Point2i> pixel_corners;
