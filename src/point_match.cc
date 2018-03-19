@@ -6,8 +6,10 @@
 
 namespace ggck {
 namespace point_match {
+
+using masked_image::MaskedImage;
  
-Mat GetPoints(Mat im1, Mat im2) {
+Mat GetPoints(const MaskedImage& im1, const MaskedImage& im2) {
   cv::Ptr<cv::AKAZE> detector = cv::AKAZE::create();
   cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
   const double match_ratio = 0.8;
@@ -21,8 +23,8 @@ Mat GetPoints(Mat im1, Mat im2) {
   std::vector<cv::Point2d> p1, p2;
 
   // Get keypoints and descriptors for both images
-  detector->detectAndCompute(im1, cv::noArray(), kp1, d1);
-  detector->detectAndCompute(im2, cv::noArray(), kp2, d2);
+  detector->detectAndCompute(im1.image, im1.mask, kp1, d1);
+  detector->detectAndCompute(im2.image, im2.mask, kp2, d2);
 
   // Get coarse matches
   matcher->knnMatch(d1, d2, matches, 2);
@@ -39,8 +41,8 @@ Mat GetPoints(Mat im1, Mat im2) {
   Mat mask;
 
   Mat H = cv::findHomography(p1, p2, mask, cv::RANSAC, 3.0);
-  std::cout << mask.rows << std::endl;
-  std::cout << H << std::endl;
+  // std::cout << mask.rows << std::endl;
+  // std::cout << H << std::endl;
   //std::vector<cv::Point2d> p_reproj;
 
   //cv::perspectiveTransform(p1, p_reproj, H);
@@ -54,7 +56,7 @@ Mat GetPoints(Mat im1, Mat im2) {
     }
   }
 
-  cv::drawMatches(im1, kp1, im2, kp2, ransaced_matches, out_image);
+  cv::drawMatches(im1.image, kp1, im2.image, kp2, pruned_matches, out_image);
   //cv::drawKeypoints(im1, kp1, out_image);
 
   return out_image;

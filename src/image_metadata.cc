@@ -55,7 +55,8 @@ cv::Point2f MatToPoint(const cv::Mat& M) {
 
 }  // namespace
 
-ImageMetadata::ImageMetadata(const std::string& image_filename) {
+ImageMetadata::ImageMetadata(const std::string& image_filename)
+	: image_filename(image_filename) {
   GDALDataset* dataset = (GDALDataset *) GDALOpen(image_filename.c_str(), GA_ReadOnly);
 	if (dataset == nullptr) {
 		throw std::runtime_error("Could not open " + image_filename);
@@ -93,6 +94,10 @@ cv::Point2f ImageMetadata::PixelToGeo(const Point2f& pixel_coords) const {
 
 cv::Size ImageMetadata::GetSize() const {
 	return size;
+}
+
+std::string ImageMetadata::GetFilename() const {
+    return image_filename;
 }
 
 }  // namespace image_metadata

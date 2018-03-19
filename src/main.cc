@@ -9,13 +9,18 @@
 
 #include "opencv2/imgproc.hpp"
 #include "opencv2/highgui.hpp"
+#include "opencv2/opencv.hpp"
 
 #include "partition.h"
 #include "image_metadata.h"
+#include "masked_image.h"
+#include "point_match.h"
 
 using ggck::partition::OverlapInfo;
 using ggck::partition::ComputeOverlaps;
 using ggck::image_metadata::ImageMetadata;
+using ggck::masked_image::MaskedImage;
+using ggck::point_match::GetPoints;
 
 typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
 typedef CGAL::Arr_segment_traits_2<Kernel> Traits_2;
@@ -82,9 +87,9 @@ int main() {
     std::cout << std::endl;
   }
 
-	std::vector<std::vector<cv::Mat>> masks_per_face;
+	std::vector<std::vector<MaskedImage>> masks_per_face;
 	for (int i = 0; i < images_per_face.size(); i++) {
-		std::vector<cv::Mat> masks;
+		std::vector<MaskedImage> masked_images;
 
 		int overlaps = std::count(images_per_face[i].begin(), images_per_face[i].end(), true);
 
@@ -113,14 +118,56 @@ int main() {
 					cv::imshow("Mask demo for face " + std::to_string(i), mask);
 					cv::waitKey(0);
 
+					cv::imshow("Image", cv::imread(image_metadata[j].GetFilename(), cv::IMREAD_LOAD_GDAL));
+					cv::waitKey(0);
+
 					delete[] points;
 
-					masks.push_back(mask);
+					MaskedImage masked_image = MaskedImage {
+						image_metadata[j],
+						mask,
+						// TODO: Replace with real image.
+						cv::Mat(),
+					};
+
+					masked_images.push_back(masked_image);
 				}
 			}
 		}
 
-		masks_per_face.push_back(masks);
+		masks_per_face.push_back(masked_images);
+	}
+
+	for (auto images_in_face = masks_per_face.begin(); images_in_face != masks_per_face.end(); images_in_face++) {
+		for (auto im1 = images_in_face->begin(); im1 != images_in_face->end(); im1++) {
+			for (auto im2 = images_in_face->begin(); im2 != images_in_face->end(); im2++) {
+				if (im1->metadata.GetFilename() != im2->metadata.GetFilename()) {
+					im1->image = cv::imread(im1->metadata.GetFilename(), CV_LOAD_IMAGE_GRAYSCALE);
+					im2->image = cv::imread(im2->metadata.GetFilename(), CV_LOAD_IMAGE_GRAYSCALE);
+
+					auto matches = GetPoints(*im1, *im2);
+					cv::imshow("Matches", matches);
+					cv::waitKey(0);
+				}
+			}
+		}
+	}
+
+	for (auto images_in_face = masks_per_face.begin(); images_in_face != masks_per_face.end(); images_in_face++) {
+		for (auto im1 = images_in_face->begin(); im1 != images_in_face->end(); im1++) {
+			for (auto im2 = images_in_face->begin(); im2 != images_in_face->end(); im2++) {
+				if (im1->metadata.GetFilename() != im2->metadata.GetFilename()) {
+					im1->image = cv::imread(im1->metadata.GetFilename(), CV_LOAD_IMAGE_GRAYSCALE);
+					im2->image = cv::imread(im2->metadata.GetFilename(), CV_LOAD_IMAGE_GRAYSCALE);
+
+					cv::imshow("Masked image", im1->image & im1->mask);
+					cv::waitKey(0);
+
+					cv::imshow("Masked image", im2->image & im2->mask);
+					cv::waitKey(0);
+				}
+			}
+		}
 	}
 	
   return 0;

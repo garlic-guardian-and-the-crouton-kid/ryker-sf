@@ -1,27 +1,45 @@
 #include "point_match.h"
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <iostream>
 
+#include "masked_image.h"
+#include "image_metadata.h"
+
 using namespace ggck::point_match;
 using namespace std;
+using namespace ggck::masked_image;
+using namespace ggck::image_metadata;
 
 int main() {
 
-  Mat im1, im2, im_out;
+  Mat im_out;
   const char* const im1_fname = "C:\\Users\\Joseph\\Documents\\Stanford\\CS231A\\Final_Project\\ryker-sf\\data\\im1.png"; //test images are already trimmed with street names removed
   const char* const im2_fname = "C:\\Users\\Joseph\\Documents\\Stanford\\CS231A\\Final_Project\\ryker-sf\\data\\im2.png";
   const char* const im_out_fname = "C:\\Users\\Joseph\\Documents\\Stanford\\CS231A\\Final_Project\\ryker-sf\\data\\matched_points.png";
 
+	ImageMetadata im1_metadata = ImageMetadata {im1_fname};	
+	ImageMetadata im2_metadata = ImageMetadata {im2_fname};
+
   // Load test images
-  im1 = cv::imread(im1_fname, CV_LOAD_IMAGE_GRAYSCALE);
-  im2 = cv::imread(im2_fname, CV_LOAD_IMAGE_GRAYSCALE);
-  if (!im1.data)
+	MaskedImage im1 = {
+		im1_metadata,
+		cv::imread(im1_fname, CV_LOAD_IMAGE_GRAYSCALE),
+		cv::Mat::ones(im1_metadata.GetSize(), CV_8U),
+	};
+	MaskedImage im2 = {
+		im2_metadata,
+		cv::imread(im2_fname, CV_LOAD_IMAGE_GRAYSCALE),
+		cv::Mat::ones(im2_metadata.GetSize(), CV_8U),
+	};
+
+  if (!im1.image.data)
   {
     cout << "Could not open or find image 1" << std::endl;
     return 1;
   }
-  if (!im2.data)
+  if (!im2.image.data)
   {
     cout << "Could not open or find image 2" << std::endl;
     return 1;

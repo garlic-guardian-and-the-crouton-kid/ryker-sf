@@ -8,6 +8,8 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 
+#include "masked_image.h"
+
 namespace ggck {
 namespace point_match {
 
@@ -16,7 +18,7 @@ typedef cv::Mat Mat;
 /*
 * Returns a matrix of points corresponded between im1 and im2
 */
-Mat GetPoints(Mat im1, Mat im2);
+Mat GetPoints(const masked_image::MaskedImage& im1, const masked_image::MaskedImage& im2);
 
 } //namespace point_match
 } //namespace ggck

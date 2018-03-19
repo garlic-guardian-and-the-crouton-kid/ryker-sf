@@ -22,8 +22,8 @@ else()
   target_include_directories(reconstruct_3d PRIVATE include)
   target_link_libraries(reconstruct_3d ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES} ${OpenCV_LIBS} ${GDAL_LIBRARY})
 
-  add_executable(point_matching_tests src/point_match.cc src/point_match_test.cc)
+  add_executable(point_matching_tests src/image_metadata.cc src/point_match.cc src/point_match_test.cc)
   target_include_directories(point_matching_tests PRIVATE include)
-  target_link_libraries(point_matching_tests ${OpenCV_LIBS})
+  target_link_libraries(point_matching_tests ${OpenCV_LIBS} ${GDAL_LIBRARY})
 endif()
 

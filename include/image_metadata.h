@@ -24,6 +24,8 @@ class ImageMetadata {
 	cv::Point2f PixelToGeo(const cv::Point2f& pixel_coords) const;
 
 	cv::Size GetSize() const;
+
+	std::string GetFilename() const;
 	
  private:
 	const std::string image_filename;
