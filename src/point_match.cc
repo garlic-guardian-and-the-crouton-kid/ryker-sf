@@ -7,9 +7,9 @@
 namespace ggck {
 namespace point_match {
 
-using masked_image::MaskedImage;
+using overlapping_image_set::MaskedImage;
  
-Mat GetPoints(const MaskedImage& im1, const MaskedImage& im2) {
+Mat GetPointMatches(const MaskedImage& im1, const MaskedImage& im2) {
   cv::Ptr<cv::AKAZE> detector = cv::AKAZE::create();
   cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
   const double match_ratio = 0.8;
@@ -56,7 +56,7 @@ Mat GetPoints(const MaskedImage& im1, const MaskedImage& im2) {
     }
   }
 
-  cv::drawMatches(im1.image, kp1, im2.image, kp2, pruned_matches, out_image);
+  cv::drawMatches(im1.image, kp1, im2.image, kp2, ransaced_matches, out_image);
   //cv::drawKeypoints(im1, kp1, out_image);
 
   return out_image;

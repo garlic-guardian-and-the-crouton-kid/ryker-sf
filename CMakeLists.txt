@@ -16,7 +16,7 @@ else()
 	include_directories("${GDAL_INCLUDE_DIR}")
   include_directories( ${OpenCV_INCLUDE_DIRS} )
 
-  set(SOURCES src/image_metadata.cc src/partition.cc src/point_match.cc src/main.cc)
+  set(SOURCES src/image_metadata.cc src/overlapping_image_set.cc src/partition.cc src/point_match.cc src/main.cc)
 
   add_executable(reconstruct_3d ${SOURCES})
   target_include_directories(reconstruct_3d PRIVATE include)
