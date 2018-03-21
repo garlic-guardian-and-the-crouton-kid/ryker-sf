@@ -16,20 +16,38 @@ namespace ggck {
 // A pair of point arrays, where ptsA[x] is matched with ptsB[x]
 typedef std::pair<std::vector<cv::Point2d>, std::vector<cv::Point2d>> PointMatches;
 
+struct SbaMeasurementInfo {
+  // Double vector with proper ordering for use with SBA 
+  std::vector<double> measurements;
+  // a char* vector with the indicator mask of which points appear in which images for use with SBA
+  // visibility mask: vmask[i, j]=1 if point i visible in image j, 0 otherwise. nxm
+  std::vector<char> vmask;
+};
+
 class PointSet {
 public:
+  // Constructor accepts a list of all metadata 
+  PointSet(const std::vector<ImageMetadata>& metadataList);
+
   // Stores matches and metadata
   void Add(const PointMatches& matches, const ImagePair& metadata);
 
-  // Returns a double vector with proper ordering for use with SBA 
-  std::vector<double> GetSbaMeasurements();
+  // Calculates and returns the measurement vector and mask for use with SBA
+  SbaMeasurementInfo GetSbaMeasurementInfo();
 
 private:
   // Arrays of point correspondences. ptsA[i][j] refers to the ith point from image j
   std::vector<PointMatches> points;
 
-  // Metadata corresponding to the 
-  std::vector<ImagePair> imagePairs;
+  // Number of unique points in points
+  int numPoints;
+
+  // Ordered vector of image metadata. Used to assign numerical indices to images
+  std::vector<ImageMetadata> metadataList;
+
+  // Array of image index pairs. Can be used to index into metadata list to retrieve metadata
+  // for a particular pair in points
+  std::vector<std::pair<int, int>> imageIndices;
 };
 
 }  // namespace ggck
