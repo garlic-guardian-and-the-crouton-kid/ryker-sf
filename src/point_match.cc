@@ -17,6 +17,7 @@ Mat PointMatches(const MaskedImage& im1, const MaskedImage& im2) {
   cv::Ptr<cv::DescriptorMatcher> matcher =
       cv::DescriptorMatcher::create("BruteForce-Hamming");
   const double match_ratio = 0.8;
+  const double ransac_threshold = 10.0;
 
   Mat d1, d2;
   std::vector<cv::KeyPoint> kp1, kp2;
@@ -42,18 +43,12 @@ Mat PointMatches(const MaskedImage& im1, const MaskedImage& im2) {
     }
   }
 
+  // Use RANSAC to fit a homography and further trim matches
   Mat mask;
-
-  Mat H = cv::findHomography(p1, p2, mask, cv::RANSAC, 3.0);
-  // std::cout << mask.rows << std::endl;
-  // std::cout << H << std::endl;
-  // std::vector<cv::Point2d> p_reproj;
-
-  // cv::perspectiveTransform(p1, p_reproj, H);
+  Mat H = cv::findHomography(p1, p2, mask, cv::RANSAC, ransac_threshold);
 
   for (int i = 0; i < mask.rows; i++) {
     if (mask.at<bool>(i)) {
-      // std::cout << p2[i] << " " << p_reproj[i] << std::endl;
       ransaced_matches.push_back(pruned_matches[i]);
     }
   }
