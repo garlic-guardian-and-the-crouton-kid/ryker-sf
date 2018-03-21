@@ -47,15 +47,15 @@ OverlappingImageSet::OverlappingImageSet(const std::vector<ImageMetadata>& image
     image_pairs(ImagePairs(image_metadata)) {
 }
 
-ConstImagePairIterator OverlappingImageSet::ImagePairsBegin() {
+ConstImagePairIterator OverlappingImageSet::ImagePairsBegin() const {
 	return image_pairs.begin();
 }
 
-ConstImagePairIterator OverlappingImageSet::ImagePairsEnd() {
+ConstImagePairIterator OverlappingImageSet::ImagePairsEnd() const {
 	return image_pairs.end();
 }
 
-MaskedImage OverlappingImageSet::ComputeImageMask(const ImageMetadata& image_metadata) {
+MaskedImage OverlappingImageSet::ComputeImageMask(const ImageMetadata& image_metadata) const {
 	cv::Size image_size = image_metadata.ImageSize();
 	// TODO: We may want to swap the height and width of this matrix, depending
 	// on how OpenCV loads images for matching, etc. If we swap the height and width
