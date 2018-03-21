@@ -1,6 +1,5 @@
 #include "triangulate.h"
 #include <sba.h>
-#include <eucsbademo.h>
 #include <math.h>
 #include <iostream>
 
@@ -116,7 +115,7 @@ void reproject(int j, int i, double *aj, double *bi, double *xij, void *adata)
   struct globs_ *gl;
 
   gl = (struct globs_ *)adata;
-  pr0 = gl->rot0params + j * FULLQUATSZ; // full quat for initial rotation estimate
+  //pr0 = gl->rot0params + j * FULLQUATSZ; // full quat for initial rotation estimate
 
   calcImgProj(aj, pr0, aj + 5, aj + 5 + 3, bi, xij); // 5 for the calibration + 3 for the quaternion's vector part
 }
