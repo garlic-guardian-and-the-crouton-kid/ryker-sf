@@ -1,11 +1,15 @@
 3D reconstruction of 1938 San Francisco
 =======================================
+### Running
 
-images.txt 
-	- This file contains the URLs of GeoTIFFs representing orthorectified
-      images taken by Harrison Ryker of San Francisco in 1938, digitized
-      by the David Rumsey Map Collection. The line number in images.txt
-      indicates the number of the image in the Map Collection.
+To run the pipeline, build the code (see below for instructions), and the run:
+
+```
+find $PWD/$IMAGES -type f | xargs build/reconstruct_3d
+```
+
+where $IMAGES is the (local) path to the directory where you have downloaded the
+images.
 
 ### Development
 The code which partitions the georectified images into overlapping sets
@@ -34,7 +38,17 @@ find src include -type f | xargs clang-format -style=google -i
 ```
 
 ### Downloading images
-Use the script in `scripts/download_images.py`.
+Use the script in `scripts/download_images.py`:
+
+```
+mkdir images/full_resolution -p
+python scripts/download_images.py images.txt images/full_resolution
+```
+
+The images.txt file contains the URLs of GeoTIFFs representing orthorectified
+images taken by Harrison Ryker of San Francisco in 1938, digitized by the David
+Rumsey Map Collection. The line number in images.txt indicates the number of the
+image in the Map Collection.
 
 ### Preprocessing images
 The GeoTIFF images available on Georeferencer ([example][]) are extremely large
