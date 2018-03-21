@@ -15,7 +15,7 @@
 
 using ggck::partition::ComputeOverlaps;
 using ggck::image_metadata::ImageMetadata;
-using ggck::point_match::GetPointMatches;
+using ggck::point_match::PointMatches;
 using ggck::overlapping_image_set::OverlappingImageSet;
 
 const std::vector<std::string> image_paths = {
@@ -36,10 +36,10 @@ int main() {
 	std::vector<OverlappingImageSet> overlaps = ComputeOverlaps(image_metadata);
 
 	for (auto overlap = overlaps.begin(); overlap != overlaps.end(); overlap++) {
-		for (auto image_pair = overlap->GetImagePairsBegin(); image_pair != overlap->GetImagePairsEnd(); image_pair++) {
-			cv::Mat matches = GetPointMatches(
-					overlap->GetMaskedImage(image_pair->first),
-					overlap->GetMaskedImage(image_pair->second));
+		for (auto image_pair = overlap->ImagePairsBegin(); image_pair != overlap->ImagePairsEnd(); image_pair++) {
+			cv::Mat matches = PointMatches(
+					overlap->ComputeImageMask(image_pair->first),
+					overlap->ComputeImageMask(image_pair->second));
 			cv::imshow("Matching points", matches);
 			cv::waitKey(0);
 		}

@@ -26,12 +26,12 @@ int main() {
 	MaskedImage im1 = {
 		im1_metadata,
 		cv::imread(im1_fname, CV_LOAD_IMAGE_GRAYSCALE),
-		cv::Mat::ones(im1_metadata.GetImageSize(), CV_8U),
+		cv::Mat::ones(im1_metadata.ImageSize(), CV_8U),
 	};
 	MaskedImage im2 = {
 		im2_metadata,
 		cv::imread(im2_fname, CV_LOAD_IMAGE_GRAYSCALE),
-		cv::Mat::ones(im2_metadata.GetImageSize(), CV_8U),
+		cv::Mat::ones(im2_metadata.ImageSize(), CV_8U),
 	};
 
   if (!im1.image.data)
@@ -45,7 +45,7 @@ int main() {
     return 1;
   }
   cout << "About to get points" << std::endl;
-  im_out = GetPointMatches(im1, im2);
+  im_out = PointMatches(im1, im2);
 
   cv::namedWindow("Display window");
   cv::imshow("Display window", im_out);

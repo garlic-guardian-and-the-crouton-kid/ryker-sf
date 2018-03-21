@@ -35,13 +35,14 @@ class OverlappingImageSet {
 
 	// Convenience functions for iterating over all pairs of images in this set.
 	// This is useful for point matching, which takes images in pairs.
-	ConstImagePairIterator GetImagePairsBegin();
-	ConstImagePairIterator GetImagePairsEnd();
+	ConstImagePairIterator ImagePairsBegin();
+	ConstImagePairIterator ImagePairsEnd();
 
   // Generate the mask for the image, and return the mask along with the image and
   // its metadata. Note that this method is expensive because it reads the image
 	// from disk.
-	MaskedImage GetMaskedImage(const image_metadata::ImageMetadata& image_metadata);
+	MaskedImage ComputeImageMask(const image_metadata::ImageMetadata& image_metadata);
+
  private:
 	const std::vector<image_metadata::ImageMetadata> image_metadata;
 

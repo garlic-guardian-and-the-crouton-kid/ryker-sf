@@ -16,9 +16,9 @@ class ImageMetadata {
 	// opening the file.
 	ImageMetadata(const std::string& image_filename);
 
-	ConstCornerIterator GetWarpedImageCornersBegin() const;
+	ConstCornerIterator WarpedImageCornersBegin() const;
 
-	ConstCornerIterator GetWarpedImageCornersEnd() const;
+	ConstCornerIterator WarpedImageCornersEnd() const;
 
 	// Transforms points from the geographic coordinate system into the
 	// reference frame of the warped image inside the GeoTIFF.
@@ -29,9 +29,9 @@ class ImageMetadata {
 	cv::Point2f WarpedImageToGeo(const cv::Point2f& pixel_coords) const;
 
 	// Returns the size of the GeoTIFF image.
-	cv::Size GetImageSize() const;
+	cv::Size ImageSize() const;
 
-	std::string GetFilename() const;
+	std::string Filename() const;
 	
  private:
 	const std::string image_filename;

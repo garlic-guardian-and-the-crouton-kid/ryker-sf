@@ -29,7 +29,7 @@ CvPolygon CgalToCvPolygon(const ImageMetadata& image, const Polygon_2& face_poly
 
 // TODO: Replace this with an implementation which constructs a vector of integer index pairs
 // and delegates iteration to that vector in order to save memory.
-std::vector<ImagePair> GetImagePairs(const std::vector<ImageMetadata>& image_metadata) {
+std::vector<ImagePair> ImagePairs(const std::vector<ImageMetadata>& image_metadata) {
 	std::vector<ImagePair> image_pairs;
 	for (auto im1 = image_metadata.begin(); im1 != image_metadata.end(); im1++) {
 		for (auto im2 = im1 + 1; im2 != image_metadata.end(); im2++) {
@@ -44,19 +44,19 @@ std::vector<ImagePair> GetImagePairs(const std::vector<ImageMetadata>& image_met
 OverlappingImageSet::OverlappingImageSet(const std::vector<ImageMetadata>& image_metadata, const Polygon_2& geo_face_polygon)
   : image_metadata(image_metadata),
     geo_face_polygon(geo_face_polygon),
-    image_pairs(GetImagePairs(image_metadata)) {
+    image_pairs(ImagePairs(image_metadata)) {
 }
 
-ConstImagePairIterator OverlappingImageSet::GetImagePairsBegin() {
+ConstImagePairIterator OverlappingImageSet::ImagePairsBegin() {
 	return image_pairs.begin();
 }
 
-ConstImagePairIterator OverlappingImageSet::GetImagePairsEnd() {
+ConstImagePairIterator OverlappingImageSet::ImagePairsEnd() {
 	return image_pairs.end();
 }
 
-MaskedImage OverlappingImageSet::GetMaskedImage(const ImageMetadata& image_metadata) {
-	cv::Size image_size = image_metadata.GetImageSize();
+MaskedImage OverlappingImageSet::ComputeImageMask(const ImageMetadata& image_metadata) {
+	cv::Size image_size = image_metadata.ImageSize();
 	// TODO: We may want to swap the height and width of this matrix, depending
 	// on how OpenCV loads images for matching, etc. If we swap the height and width
 	// of the matrix, then we also need to swap the coordinates of the points in the
@@ -76,7 +76,7 @@ MaskedImage OverlappingImageSet::GetMaskedImage(const ImageMetadata& image_metad
 
 	delete[] points;
 
-	cv::Mat image = cv::imread(image_metadata.GetFilename(), CV_LOAD_IMAGE_GRAYSCALE);
+	cv::Mat image = cv::imread(image_metadata.Filename(), CV_LOAD_IMAGE_GRAYSCALE);
 
 	return MaskedImage {
 		image_metadata,

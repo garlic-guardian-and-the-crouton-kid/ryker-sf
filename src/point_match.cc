@@ -9,7 +9,7 @@ namespace point_match {
 
 using overlapping_image_set::MaskedImage;
  
-Mat GetPointMatches(const MaskedImage& im1, const MaskedImage& im2) {
+Mat PointMatches(const MaskedImage& im1, const MaskedImage& im2) {
   cv::Ptr<cv::AKAZE> detector = cv::AKAZE::create();
   cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
   const double match_ratio = 0.8;
@@ -22,11 +22,11 @@ Mat GetPointMatches(const MaskedImage& im1, const MaskedImage& im2) {
   std::vector<cv::DMatch> ransaced_matches;
   std::vector<cv::Point2d> p1, p2;
 
-  // Get keypoints and descriptors for both images
+  //  keypoints and descriptors for both images
   detector->detectAndCompute(im1.image, im1.mask, kp1, d1);
   detector->detectAndCompute(im2.image, im2.mask, kp2, d2);
 
-  // Get coarse matches
+  //  coarse matches
   matcher->knnMatch(d1, d2, matches, 2);
 
   // Trim out matches that aren't significantly better than the next nearest

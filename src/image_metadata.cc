@@ -42,7 +42,7 @@ cv::Mat AffineMapMatrix(double* affine_map) {
 }
 
 // Returns a list of coordinates representing the corners of the bounding box of the entire GeoTIFF.
-std::vector<Point2i> GetImageCorners(cv::Size size) {
+std::vector<Point2i> ImageCorners(cv::Size size) {
 	// This list of coordinates MUST be a continuous chain of coordinates winding around the edge of the bounding box.
 	// CGAL connects points in order to form a polygon, and out-of-order coordinates will produce a bowtie shape rather than a rectangle.
 	return std::vector<Point2i>({
@@ -117,7 +117,7 @@ std::pair<std::vector<Point2i>, std::vector<Point2i>> MatchClosestPoints(
 };
 
 // Returns a list of coordinates representing the corners of the warped image inside the GeoTIFF.
-std::vector<Point2i> GetWarpedCorners(const std::string& filename) {
+std::vector<Point2i> WarpedCorners(const std::string& filename) {
 	std::vector<std::vector<cv::Point>> contours;
 	std::vector<cv::Vec4i> hierarchy;
 
@@ -146,7 +146,7 @@ std::vector<Point2i> GetWarpedCorners(const std::string& filename) {
 }
 
 // Returns the affine transformation which maps the corners of the GeoTIFF onto the corners of the warped image inside the GeoTIFF.
-cv::Mat GetImageWarpAffineMap(
+cv::Mat ImageWarpAffineMap(
 		const std::vector<Point2i> image_corners,
 		const std::vector<Point2i> warped_corners) {
 	std::pair<std::vector<Point2i>, std::vector<Point2i>> matched_corners =
@@ -178,16 +178,16 @@ ImageMetadata::ImageMetadata(const std::string& image_filename)
 	}
 
 	size = cv::Size(dataset->GetRasterXSize(), dataset->GetRasterYSize());
-	warped_image_corners = GetWarpedCorners(image_filename);
+	warped_image_corners = WarpedCorners(image_filename);
 	pixels_to_geo_affine_map = AffineMapMatrix(geoTransform);
-	image_warp_affine_map = GetImageWarpAffineMap(GetImageCorners(size), warped_image_corners);
+	image_warp_affine_map = ImageWarpAffineMap(ImageCorners(size), warped_image_corners);
 }
 
-ConstCornerIterator ImageMetadata::GetWarpedImageCornersBegin() const {
+ConstCornerIterator ImageMetadata::WarpedImageCornersBegin() const {
 	return warped_image_corners.begin();
 }
 
-ConstCornerIterator ImageMetadata::GetWarpedImageCornersEnd() const {
+ConstCornerIterator ImageMetadata::WarpedImageCornersEnd() const {
 	return warped_image_corners.end();
 }
 
@@ -203,11 +203,11 @@ Point2f ImageMetadata::WarpedImageToGeo(const Point2f& pixel_coords) const {
 	return MatToPoint(pixels_to_geo_affine_map * Homogenize(MatToPoint(geo_corners_to_image_corners_map * Homogenize(pixel_coords))));
 }
 
-cv::Size ImageMetadata::GetImageSize() const {
+cv::Size ImageMetadata::ImageSize() const {
 	return size;
 }
 
-std::string ImageMetadata::GetFilename() const {
+std::string ImageMetadata::Filename() const {
     return image_filename;
 }
 

@@ -18,7 +18,7 @@ typedef cv::Mat Mat;
 /*
 * Returns a matrix of points corresponded between im1 and im2
 */
-Mat GetPointMatches(const overlapping_image_set::MaskedImage& im1, const overlapping_image_set::MaskedImage& im2);
+Mat PointMatches(const overlapping_image_set::MaskedImage& im1, const overlapping_image_set::MaskedImage& im2);
 
 } //namespace point_match
 } //namespace ggck

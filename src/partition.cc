@@ -36,9 +36,9 @@ Point_2 RoundToPoint(const Point2f& point) {
 	return Point_2((int) rint(point.x), (int) rint(point.y));
 }
 
-Polygon_2 GetGeoPolygon(const ImageMetadata& image_metadata) {
+Polygon_2 GeoPolygon(const ImageMetadata& image_metadata) {
 	std::vector<Point_2> vertices;
-	std::transform(image_metadata.GetWarpedImageCornersBegin(), image_metadata.GetWarpedImageCornersEnd(), std::back_inserter(vertices),
+	std::transform(image_metadata.WarpedImageCornersBegin(), image_metadata.WarpedImageCornersEnd(), std::back_inserter(vertices),
 			[image_metadata](const cv::Point2f& corner) {
 				return RoundToPoint(image_metadata.WarpedImageToGeo(corner));
 			});
@@ -55,7 +55,7 @@ std::vector<OverlappingImageSet> ComputeOverlaps(const std::vector<ImageMetadata
 	// to use one of the simple geometry kernels which copies points naively.
   Arrangement_2 arrangement;
   for (auto image = images.begin(); image != images.end(); image++) {
-		Polygon_2 image_polygon = GetGeoPolygon(*image);
+		Polygon_2 image_polygon = GeoPolygon(*image);
     CGAL::insert(arrangement, image_polygon.edges_begin(), image_polygon.edges_end());
   }
 
@@ -71,8 +71,8 @@ std::vector<OverlappingImageSet> ComputeOverlaps(const std::vector<ImageMetadata
 
 		std::vector<ImageMetadata> overlapping_images;
 		for (auto image = images.begin(); image != images.end(); image++) {
-			// TODO: Avoid calling GetGeoPolygon more than once.
-			const Polygon_2 image_polygon = GetGeoPolygon(*image);
+			// TODO: Avoid calling GeoPolygon more than once.
+			const Polygon_2 image_polygon = GeoPolygon(*image);
 			if (CGAL::do_intersect(image_polygon, face_polygon)) {
 				overlapping_images.push_back(*image);
 			}
