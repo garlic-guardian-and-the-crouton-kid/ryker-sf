@@ -16,23 +16,22 @@
 using ggck::ImageMetadata;
 using ggck::OverlappingImageSet;
 
-const std::vector<std::string> image_paths = {
-    "/home/justin/p/rykers-sf/images/512w/001.tif",
-    "/home/justin/p/rykers-sf/images/512w/002.tif",
-};
+// The image filenames should be provided as the only command-line arguments
+// to the program.
+std::vector<ImageMetadata> GetImageMetadata(int argc, char* argv[]) {
+	std::vector<ImageMetadata> image_metadata;
+	for (int i = 1; i < argc; i++) {
+		std::string image_filename = std::string(argv[i]);
+		image_metadata.push_back(ImageMetadata(image_filename));
+	}
+	return image_metadata;
+}
 
-int main() {
+int main(int argc, char* argv[]) {
   GDALAllRegister();
 
-  std::vector<ImageMetadata> image_metadata;
-  std::transform(image_paths.begin(), image_paths.end(),
-                 std::back_inserter(image_metadata),
-                 [](const std::string& image_path) {
-                   ImageMetadata metadata(image_path);
-                   return metadata;
-                 });
-
-  std::vector<OverlappingImageSet> overlaps = ComputeOverlaps(image_metadata);
+  std::vector<OverlappingImageSet> overlaps = ComputeOverlaps(
+			GetImageMetadata(argc, argv));
 
   for (auto overlap = overlaps.begin(); overlap != overlaps.end(); overlap++) {
     for (auto image_pair = overlap->ImagePairsBegin();
