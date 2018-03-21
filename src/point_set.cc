@@ -13,7 +13,7 @@ namespace ggck {
 PointSet::PointSet(const std::vector<ImageMetadata>& metadataList):
   metadataList(metadataList)
 {
-  numPoints = 0;
+  numMatches = 0;
 }
 
 void PointSet::Add(PointMatches matches, ImagePair metadata)
@@ -36,7 +36,7 @@ void PointSet::Add(PointMatches matches, ImagePair metadata)
   // store matches and calculated indices
   points.push_back(matches);
   imageIndices.push_back(indices);
-  numPoints += static_cast<int>(matches.first.size());
+  numMatches += static_cast<int>(matches.size());
 }
 
 /* 
@@ -48,18 +48,53 @@ void PointSet::Add(PointMatches matches, ImagePair metadata)
  */
 SbaMeasurementInfo PointSet::GetSbaMeasurementInfo() 
 {
+  int numFrames = metadataList.size();
+
   // initialize mask with zeros
-  std::vector<char> mask(numPoints * metadataList.size()); 
+  std::vector<char> mask(numMatches * metadataList.size()); 
   std::fill(mask.begin(), mask.end(), 0);
 
-  std::vector<double> measurements(numPoints);
+  // initialize measurement vector - each 3D point is observed exactly twice
+  // and has two parameters
+  std::vector<double> measurements(numMatches * 2 * 2);
 
   //iterate over all points
+  int matchIndex = 0;
   for (int i = 0; i < imageIndices.size(); i++)
   {
     if (imageIndices[i].first < imageIndices[i].second)
     {
+      for (auto const & match : points[i])
+      {
+        // Store 2d point data in measurements array, ordered by index
+        measurements[matchIndex * 4] = match.first.x;
+        measurements[matchIndex * 4 + 1] = match.first.y;
+        measurements[matchIndex * 4 + 2] = match.second.x;
+        measurements[matchIndex * 4 + 3] = match.second.y;
 
+        // mark that point is visible in these images in mask array
+        mask[matchIndex*numFrames + imageIndices[i].first] = 1;
+        mask[matchIndex*numFrames + imageIndices[i].second] = 1;
+
+        matchIndex++;
+      }
+    }
+    else if (imageIndices[i].second < imageIndices[i].first)
+    {
+      for (auto const & match : points[i])
+      {
+        // Store 2d point data in measurements array, ordered by index
+        measurements[matchIndex * 4] = match.second.x;
+        measurements[matchIndex * 4 + 1] = match.second.y;
+        measurements[matchIndex * 4 + 2] = match.first.x;
+        measurements[matchIndex * 4 + 3] = match.first.y;
+
+        // mark that point is visible in these images in mask array
+        mask[matchIndex*numFrames + imageIndices[i].first] = 1;
+        mask[matchIndex*numFrames + imageIndices[i].second] = 1;
+
+        matchIndex++;
+      }
     }
   }
   return SbaMeasurementInfo{ measurements, mask };
