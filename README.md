@@ -27,6 +27,12 @@ consistent style (you can install with `pip install cpplint`).
 cpplint --filter=-build/include_subdir include/*.h src/*.cc
 ```
 
+If there are lint errors, clang-format can probably fix many of them:
+
+```
+find src include -type f | xargs clang-format -style=google -i
+```
+
 ### Preprocessing images
 The GeoTIFF images available on Georeferencer ([example][]) are extremely large
 (e.g. 11347x13517). Resizing the images is necessary to make the pipeline

@@ -4,6 +4,8 @@
 #ifndef INCLUDE_PARTITION_H_
 #define INCLUDE_PARTITION_H_
 
+#include <vector>
+
 #include "opencv2/core.hpp"
 
 #include "image_metadata.h"
@@ -12,7 +14,7 @@
 namespace ggck {
 
 std::vector<OverlappingImageSet> ComputeOverlaps(
-	const std::vector<ImageMetadata>& images);
+    const std::vector<ImageMetadata>& images);
 
 }  // namespace ggck
 

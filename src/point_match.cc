@@ -1,15 +1,21 @@
-#include <opencv2/features2d.hpp>
+/*
+ * Copyright 2018 Justin Manley and Joseph Bolling.
+ */
 #include "point_match.h"
-#include <memory>
+
 #include <iostream>
+#include <memory>
+
+#include <opencv2/features2d.hpp>
 
 namespace ggck {
 
 typedef cv::Mat Mat;
- 
+
 Mat PointMatches(const MaskedImage& im1, const MaskedImage& im2) {
   cv::Ptr<cv::AKAZE> detector = cv::AKAZE::create();
-  cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
+  cv::Ptr<cv::DescriptorMatcher> matcher =
+      cv::DescriptorMatcher::create("BruteForce-Hamming");
   const double match_ratio = 0.8;
 
   Mat d1, d2;
@@ -41,21 +47,19 @@ Mat PointMatches(const MaskedImage& im1, const MaskedImage& im2) {
   Mat H = cv::findHomography(p1, p2, mask, cv::RANSAC, 3.0);
   // std::cout << mask.rows << std::endl;
   // std::cout << H << std::endl;
-  //std::vector<cv::Point2d> p_reproj;
+  // std::vector<cv::Point2d> p_reproj;
 
-  //cv::perspectiveTransform(p1, p_reproj, H);
+  // cv::perspectiveTransform(p1, p_reproj, H);
 
-  for (int i = 0; i < mask.rows; i++)
-  {
-    if (mask.at<bool>(i)) 
-    {
-      //std::cout << p2[i] << " " << p_reproj[i] << std::endl;
+  for (int i = 0; i < mask.rows; i++) {
+    if (mask.at<bool>(i)) {
+      // std::cout << p2[i] << " " << p_reproj[i] << std::endl;
       ransaced_matches.push_back(pruned_matches[i]);
     }
   }
 
   cv::drawMatches(im1.image, kp1, im2.image, kp2, ransaced_matches, out_image);
-  //cv::drawKeypoints(im1, kp1, out_image);
+  // cv::drawKeypoints(im1, kp1, out_image);
 
   return out_image;
 }
