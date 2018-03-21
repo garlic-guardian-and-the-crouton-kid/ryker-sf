@@ -10,13 +10,13 @@
 
 namespace ggck {
 
-PointSet::PointSet(const std::vector<ImageMetadata>& metadataList)
+PointSet::PointSet(const std::vector<ImageMetadata>& metadataList):
+  metadataList(metadataList)
 {
-  PointSet::metadataList = metadataList;
   numPoints = 0;
 }
 
-void PointSet::Add(const PointMatches& matches, const ImagePair& metadata)
+void PointSet::Add(PointMatches matches, ImagePair metadata)
 {
   std::pair<int, int> indices;
 
@@ -52,6 +52,8 @@ SbaMeasurementInfo PointSet::GetSbaMeasurementInfo()
   std::vector<char> mask(numPoints * metadataList.size()); 
   std::fill(mask.begin(), mask.end(), 0);
 
+  std::vector<double> measurements(numPoints);
+
   //iterate over all points
   for (int i = 0; i < imageIndices.size(); i++)
   {
@@ -60,6 +62,7 @@ SbaMeasurementInfo PointSet::GetSbaMeasurementInfo()
 
     }
   }
+  return SbaMeasurementInfo{ measurements, mask };
 }
 
 }  // namespace ggck

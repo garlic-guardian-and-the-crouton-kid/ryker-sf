@@ -30,7 +30,7 @@ public:
   PointSet(const std::vector<ImageMetadata>& metadataList);
 
   // Stores matches and metadata
-  void Add(const PointMatches& matches, const ImagePair& metadata);
+  void Add(PointMatches matches, ImagePair metadata);
 
   // Calculates and returns the measurement vector and mask for use with SBA
   SbaMeasurementInfo GetSbaMeasurementInfo();
@@ -43,7 +43,7 @@ private:
   int numPoints;
 
   // Ordered vector of image metadata. Used to assign numerical indices to images
-  std::vector<ImageMetadata> metadataList;
+  const std::vector<ImageMetadata> metadataList;
 
   // Array of image index pairs. Can be used to index into metadata list to retrieve metadata
   // for a particular pair in points
