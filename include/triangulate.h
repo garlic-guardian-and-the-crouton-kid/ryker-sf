@@ -6,6 +6,8 @@
 
 namespace ggck {
 
+
+
 } //namespace ggck
 
 #endif //INCLUDE_POINT_MATCH_H_
