@@ -16,7 +16,7 @@ namespace ggck {
 
 struct CvPolygon {
   std::vector<cv::Point> points;
-  int* npoints;
+  std::vector<int> npoints;
   int ncontours;
 };
 

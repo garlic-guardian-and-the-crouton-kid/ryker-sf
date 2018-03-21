@@ -19,7 +19,7 @@ CvPolygon CgalToCvPolygon(const ImageMetadata& image,
                        CGAL::to_double(point.x()), CGAL::to_double(point.y())));
                  });
 
-  int npoints[1] = {static_cast<int>(points.size())};
+  std::vector<int> npoints = { static_cast<int>(points.size()) };
   int ncontours = 1;
 
   return CvPolygon{
@@ -76,7 +76,7 @@ MaskedImage OverlappingImageSet::ComputeImageMask(
   }
 
   cv::Scalar color = cv::Scalar(255);
-  cv::fillPoly(mask, points, polygon.npoints, polygon.ncontours, color);
+  cv::fillPoly(mask, points, &polygon.npoints[0], polygon.ncontours, color);
 
   delete[] points;
 
