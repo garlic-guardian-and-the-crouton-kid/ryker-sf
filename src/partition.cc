@@ -3,22 +3,16 @@
  */
 #include "partition.h"
 
-#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
-#include <CGAL/Arr_segment_traits_2.h>
-#include <CGAL/Polygon_2.h>
-#include <CGAL/Arrangement_2.h>
 #include <CGAL/Boolean_set_operations_2.h>
 
-namespace ggck {
-namespace partition {
+#include <math.h>
+#include <iostream>
 
-typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
-typedef CGAL::Arr_segment_traits_2<Kernel> Traits_2;
-typedef Traits_2::Point_2 Point_2;
-typedef Traits_2::X_monotone_curve_2 Segment_2;
-typedef CGAL::Arrangement_2<Traits_2> Arrangement_2;
-typedef CGAL::Polygon_2<Kernel> Polygon_2;
-typedef Arrangement_2::Face Face_2;
+#include "geometry.h"
+
+namespace ggck {
+
+using cv::Point2f;
 
 // Note: The face must be bounded and should not be fictitious.
 // Its outer boundary circulator should be nonempty.
@@ -27,46 +21,76 @@ Polygon_2 FaceBoundaryToPolygon(const Face_2& face) {
 
   auto iterator_current_edge = face.outer_ccb();
   do {
-      points.push_back(iterator_current_edge->source()->point());
-      iterator_current_edge++;
+    points.push_back(iterator_current_edge->source()->point());
+    iterator_current_edge++;
   } while (iterator_current_edge != face.outer_ccb());
 
   return Polygon_2(points.begin(), points.end());
 }
 
-OverlapInfo ComputeOverlaps(std::vector<Polygon_2> images) {
-  Arrangement_2 arrangement;
-  for (auto image = images.begin(); image != images.end(); image++) {
-    CGAL::insert(arrangement, image->edges_begin(), image->edges_end());
-  }
-
-  // The bool at the (i, j)-th position in this two-dimensional vector indicates
-  // whether the ith face overlaps with the jth image. 
-  std::vector<std::vector<bool>> images_per_face;
-  std::transform(
-          arrangement.faces_begin(),
-          arrangement.faces_end(),
-          std::back_inserter(images_per_face),
-    [images, images_per_face](const auto& face) -> std::vector<bool> {
-      if (face.is_fictitious() || face.is_unbounded()) {
-        return std::vector<bool>(images.size(), false);
-      }
-      std::vector<bool> face_intersects_image;
-      const Polygon_2 face_polygon = FaceBoundaryToPolygon(face);
-      std::transform(
-              images.begin(),
-              images.end(),
-              std::back_inserter(face_intersects_image),
-        [face_polygon](const Polygon_2& image) -> bool {
-          return CGAL::do_intersect(image, face_polygon);
-        });
-      return face_intersects_image;
-    });
-
-  return OverlapInfo{
-    images_per_face = images_per_face
-  };
+Point_2 RoundToPoint(const Point2f& point) {
+  return Point_2(static_cast<int>(rint(point.x)),
+                 static_cast<int>(rint(point.y)));
 }
 
-}  // namespace partition
+Polygon_2 GeoPolygon(const ImageMetadata& image_metadata) {
+  std::vector<Point_2> vertices;
+  std::transform(image_metadata.WarpedImageCornersBegin(),
+                 image_metadata.WarpedImageCornersEnd(),
+                 std::back_inserter(vertices),
+                 [image_metadata](const cv::Point2f& corner) {
+                   return RoundToPoint(image_metadata.ImageToGeo(corner));
+                 });
+  return Polygon_2(vertices.begin(), vertices.end());
+}
+
+std::vector<OverlappingImageSet> ComputeOverlaps(
+    const std::vector<ImageMetadata>& images) {
+  // WARNING! When this arrangement goes out of scope, the base objects
+  // associated with it (e.g. the Point_2 objects representing the vertices)
+  // will be destroyed, and any other objects (e.g. instances of Face_2) which
+  // have been copied elsewhere will be left with dangling pointers to these
+  // destroyed objects. This is because CGAL keeps a single copy of all Point_2
+  // objects, which are accessed via a Handle, so when a Face_2 is copied, the
+  // underlying points are not copied. An alternative way to handle this issue
+  // would be to use one of the simple geometry kernels which copies points
+  // naively.
+  Arrangement_2 arrangement;
+  for (auto image = images.begin(); image != images.end(); image++) {
+    Polygon_2 image_polygon = GeoPolygon(*image);
+    CGAL::insert(arrangement, image_polygon.edges_begin(),
+                 image_polygon.edges_end());
+  }
+  std::vector<OverlappingImageSet> overlaps;
+  for (auto face = arrangement.faces_begin(); face != arrangement.faces_end();
+       face++) {
+    if (face->is_fictitious() || face->is_unbounded()) {
+      continue;
+    }
+
+    // TODO(justinmanley): Represent the face as a general polygon rather than
+    // the simple polygon that is returned from FaceBoundaryToPolygon.
+    const Polygon_2 face_polygon = FaceBoundaryToPolygon(*face);
+
+    std::vector<ImageMetadata> overlapping_images;
+    for (auto image = images.begin(); image != images.end(); image++) {
+      // TODO(justinmanley): Avoid calling GeoPolygon more than once.
+      const Polygon_2 image_polygon = GeoPolygon(*image);
+      if (CGAL::do_intersect(image_polygon, face_polygon)) {
+        overlapping_images.push_back(*image);
+      }
+    }
+
+    // We only care about faces which have more than one image, since we need at
+    // least two images to find point correspondences.
+    if (overlapping_images.size() > 1) {
+      OverlappingImageSet image_set =
+          OverlappingImageSet(overlapping_images, face_polygon);
+      overlaps.push_back(image_set);
+    }
+  }
+
+  return overlaps;
+}
+
 }  // namespace ggck

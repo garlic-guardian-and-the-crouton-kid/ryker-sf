@@ -1,16 +1,23 @@
-#include <opencv2/features2d.hpp>
+/*
+ * Copyright 2018 Justin Manley and Joseph Bolling.
+ */
 #include "point_match.h"
-#include <memory>
-#include <iostream>
 
+#include <iostream>
+#include <memory>
+
+#include <opencv2/features2d.hpp>
 
 namespace ggck {
-namespace point_match {
- 
-Mat GetPoints(Mat im1, Mat im2) {
+
+typedef cv::Mat Mat;
+
+Mat PointMatches(const MaskedImage& im1, const MaskedImage& im2) {
   cv::Ptr<cv::AKAZE> detector = cv::AKAZE::create();
-  cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
+  cv::Ptr<cv::DescriptorMatcher> matcher =
+      cv::DescriptorMatcher::create("BruteForce-Hamming");
   const double match_ratio = 0.8;
+  const double ransac_threshold = 10.0;
 
   Mat d1, d2;
   std::vector<cv::KeyPoint> kp1, kp2;
@@ -20,11 +27,11 @@ Mat GetPoints(Mat im1, Mat im2) {
   std::vector<cv::DMatch> ransaced_matches;
   std::vector<cv::Point2d> p1, p2;
 
-  // Get keypoints and descriptors for both images
-  detector->detectAndCompute(im1, cv::noArray(), kp1, d1);
-  detector->detectAndCompute(im2, cv::noArray(), kp2, d2);
+  //  keypoints and descriptors for both images
+  detector->detectAndCompute(im1.image, im1.mask, kp1, d1);
+  detector->detectAndCompute(im2.image, im2.mask, kp2, d2);
 
-  // Get coarse matches
+  //  coarse matches
   matcher->knnMatch(d1, d2, matches, 2);
 
   // Trim out matches that aren't significantly better than the next nearest
@@ -36,29 +43,20 @@ Mat GetPoints(Mat im1, Mat im2) {
     }
   }
 
+  // Use RANSAC to fit a homography and further trim matches
   Mat mask;
+  Mat H = cv::findHomography(p1, p2, mask, cv::RANSAC, ransac_threshold);
 
-  Mat H = cv::findHomography(p1, p2, mask, cv::RANSAC, 3.0);
-  std::cout << mask.rows << std::endl;
-  std::cout << H << std::endl;
-  //std::vector<cv::Point2d> p_reproj;
-
-  //cv::perspectiveTransform(p1, p_reproj, H);
-
-  for (int i = 0; i < mask.rows; i++)
-  {
-    if (mask.at<bool>(i)) 
-    {
-      //std::cout << p2[i] << " " << p_reproj[i] << std::endl;
+  for (int i = 0; i < mask.rows; i++) {
+    if (mask.at<bool>(i)) {
       ransaced_matches.push_back(pruned_matches[i]);
     }
   }
 
-  cv::drawMatches(im1, kp1, im2, kp2, ransaced_matches, out_image);
-  //cv::drawKeypoints(im1, kp1, out_image);
+  cv::drawMatches(im1.image, kp1, im2.image, kp2, ransaced_matches, out_image);
+  // cv::drawKeypoints(im1, kp1, out_image);
 
   return out_image;
 }
 
-} //namespace point_match
-} //namespace ggck
+}  // namespace ggck

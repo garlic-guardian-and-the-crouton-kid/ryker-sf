@@ -26,3 +26,27 @@ consistent style (you can install with `pip install cpplint`).
 ```
 cpplint --filter=-build/include_subdir include/*.h src/*.cc
 ```
+
+If there are lint errors, clang-format can probably fix many of them:
+
+```
+find src include -type f | xargs clang-format -style=google -i
+```
+
+### Preprocessing images
+The GeoTIFF images available on Georeferencer ([example][]) are extremely large
+(e.g. 11347x13517). Resizing the images is necessary to make the pipeline
+tractable. You can use [GDAL](http://www.gdal.org/) to resize the downloaded
+GEOTIFFs. For example, to resize an image called input.tif to be 512 pixels
+wide, maintaining the aspect ratio of the image, and write it to a new file
+output.tif, run:
+
+```
+gdalwarp -of GTiff -ts 512 0 input.tif output.tif
+```
+
+See [this answer][gdalwarp image resize] on StackOverflow for more details.
+
+
+[example]: https://davidrumsey.georeferencer.com/maps/280343924889/
+[gdalwarp image resize]: https://gis.stackexchange.com/questions/111523/how-to-correctly-resize-raster-gis-images-to-a-given-px-width
