@@ -3,11 +3,9 @@
 #include <memory>
 #include <iostream>
 
-
 namespace ggck {
-namespace point_match {
 
-using overlapping_image_set::MaskedImage;
+typedef cv::Mat Mat;
  
 Mat PointMatches(const MaskedImage& im1, const MaskedImage& im2) {
   cv::Ptr<cv::AKAZE> detector = cv::AKAZE::create();
@@ -62,5 +60,4 @@ Mat PointMatches(const MaskedImage& im1, const MaskedImage& im2) {
   return out_image;
 }
 
-} //namespace point_match
-} //namespace ggck
+}  // namespace ggck

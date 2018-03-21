@@ -7,10 +7,9 @@
 #include "overlapping_image_set.h"
 #include "image_metadata.h"
 
-using namespace ggck::point_match;
 using namespace std;
-using namespace ggck::overlapping_image_set;
-using namespace ggck::image_metadata;
+using namespace ggck;
+using cv::Mat;
 
 int main() {
 
@@ -26,12 +25,12 @@ int main() {
 	MaskedImage im1 = {
 		im1_metadata,
 		cv::imread(im1_fname, CV_LOAD_IMAGE_GRAYSCALE),
-		cv::Mat::ones(im1_metadata.ImageSize(), CV_8U),
+		Mat::ones(im1_metadata.ImageSize(), CV_8U),
 	};
 	MaskedImage im2 = {
 		im2_metadata,
 		cv::imread(im2_fname, CV_LOAD_IMAGE_GRAYSCALE),
-		cv::Mat::ones(im2_metadata.ImageSize(), CV_8U),
+		Mat::ones(im2_metadata.ImageSize(), CV_8U),
 	};
 
   if (!im1.image.data)

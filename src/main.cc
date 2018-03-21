@@ -13,10 +13,7 @@
 #include "point_match.h"
 #include "overlapping_image_set.h"
 
-using ggck::partition::ComputeOverlaps;
-using ggck::image_metadata::ImageMetadata;
-using ggck::point_match::PointMatches;
-using ggck::overlapping_image_set::OverlappingImageSet;
+using namespace ggck;
 
 const std::vector<std::string> image_paths = {
 	"/home/justin/p/rykers-sf/images/512w/001.tif",

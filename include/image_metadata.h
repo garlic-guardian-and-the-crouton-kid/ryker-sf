@@ -6,7 +6,6 @@
 #include "opencv2/core.hpp"
 
 namespace ggck {
-namespace image_metadata {
 
 typedef std::vector<cv::Point2i>::const_iterator ConstCornerIterator;
 
@@ -55,7 +54,6 @@ class ImageMetadata {
 	cv::Mat image_warp_affine_map;
 };
 
-}  // namespace image_metadata
 }  // namespace ggck
 
 #endif  // INCLUDE_IMAGE_METADATA_H_

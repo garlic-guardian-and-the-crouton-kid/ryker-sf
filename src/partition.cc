@@ -11,11 +11,8 @@
 #include "geometry.h"
 
 namespace ggck {
-namespace partition {
 
 using cv::Point2f;
-using image_metadata::ImageMetadata;
-using overlapping_image_set::OverlappingImageSet;
 
 // Note: The face must be bounded and should not be fictitious.
 // Its outer boundary circulator should be nonempty.
@@ -89,5 +86,4 @@ std::vector<OverlappingImageSet> ComputeOverlaps(const std::vector<ImageMetadata
 	return overlaps;
 }
 
-}  // namespace partition
 }  // namespace ggck

@@ -10,12 +10,10 @@
 #include "overlapping_image_set.h"
 
 namespace ggck {
-namespace partition {
 
-std::vector<overlapping_image_set::OverlappingImageSet> ComputeOverlaps(
-		const std::vector<image_metadata::ImageMetadata>& images);
+std::vector<OverlappingImageSet> ComputeOverlaps(
+	const std::vector<ImageMetadata>& images);
 
-}  // namespace partition
 }  // namespace ggck
 
 #endif  // INCLUDE_PARTITION_H_

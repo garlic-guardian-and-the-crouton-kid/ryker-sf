@@ -20,7 +20,6 @@ bool operator<(const cv::Point& a, const cv::Point& b) {
 }
 
 namespace ggck {
-namespace image_metadata {
 
 using cv::Point2f;
 using cv::Point2i;
@@ -211,5 +210,4 @@ std::string ImageMetadata::Filename() const {
     return image_filename;
 }
 
-}  // namespace image_metadata
 }  // namespace ggck

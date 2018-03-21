@@ -4,11 +4,8 @@
 #include "opencv2/highgui.hpp"
 
 namespace ggck {
-namespace overlapping_image_set {
 
 namespace {
-
-using image_metadata::ImageMetadata;
 
 CvPolygon CgalToCvPolygon(const ImageMetadata& image, const Polygon_2& face_polygon) {
   std::vector<cv::Point> points;
@@ -85,5 +82,4 @@ MaskedImage OverlappingImageSet::ComputeImageMask(const ImageMetadata& image_met
 	};
 }
 
-}  // namespace overlapping_image_set
 }  // namespace ggck
