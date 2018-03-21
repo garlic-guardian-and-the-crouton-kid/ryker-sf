@@ -5,6 +5,7 @@
 #define INCLUDE_POINT_SET_H_
 
 #include "overlapping_image_set.h"
+#include "point_match.h"
 
 #include <vector>
 
@@ -25,6 +26,9 @@ struct SbaMeasurementInfo {
   std::vector<char> vmask;
 };
 
+// Converts from an array of dense points adn matches to a PointMatches structure
+PointMatches DensePointsAndMatchesToPointMatches(DensePointsAndMatches dpMatches);
+
 class PointSet {
 public:
   // Constructor accepts a list of all metadata 
@@ -32,6 +36,7 @@ public:
 
   // Stores matches and metadata
   void Add(PointMatches matches, ImagePair metadata);
+  void Add(DensePointsAndMatches dpMatches, ImagePair metadata);
 
   // Calculates and returns the measurement vector and mask for use with SBA
   SbaMeasurementInfo GetSbaMeasurementInfo();

@@ -10,6 +10,23 @@
 
 namespace ggck {
 
+// Converts from an array of dense points and matches to a PointMatches structure
+PointMatches DensePointsAndMatchesToPointMatches(DensePointsAndMatches dpMatches)
+{
+  PointMatches pm;
+  pm.reserve(dpMatches.matches.size());
+
+  for (auto & dpMatch : dpMatches.matches)
+  {
+    std::pair<cv::Point2d, cv::Point2d> pair;
+    pair.first = dpMatches.kp1[dpMatch.queryIdx].pt;
+    pair.second = dpMatches.kp2[dpMatch.trainIdx].pt;
+    pm.push_back(pair);
+  }
+
+  return pm;
+}
+
 PointSet::PointSet(const std::vector<ImageMetadata>& metadataList):
   metadataList(metadataList)
 {
@@ -37,6 +54,12 @@ void PointSet::Add(PointMatches matches, ImagePair metadata)
   points.push_back(matches);
   imageIndices.push_back(indices);
   numMatches += static_cast<int>(matches.size());
+}
+
+
+void PointSet::Add(DensePointsAndMatches dpMatches, ImagePair metadata)
+{
+  this->Add(DensePointsAndMatchesToPointMatches(dpMatches), metadata);
 }
 
 /* 

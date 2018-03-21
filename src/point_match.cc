@@ -12,7 +12,7 @@ namespace ggck {
 
 typedef cv::Mat Mat;
 
-Mat PointMatches(const MaskedImage& im1, const MaskedImage& im2) {
+DensePointsAndMatches ComputePointMatches(const MaskedImage& im1, const MaskedImage& im2) {
   cv::Ptr<cv::AKAZE> detector = cv::AKAZE::create();
   cv::Ptr<cv::DescriptorMatcher> matcher =
       cv::DescriptorMatcher::create("BruteForce-Hamming");
@@ -53,10 +53,10 @@ Mat PointMatches(const MaskedImage& im1, const MaskedImage& im2) {
     }
   }
 
-  cv::drawMatches(im1.image, kp1, im2.image, kp2, ransaced_matches, out_image);
+  //cv::drawMatches(im1.image, kp1, im2.image, kp2, ransaced_matches, out_image);
   // cv::drawKeypoints(im1, kp1, out_image);
 
-  return out_image;
+  return DensePointsAndMatches{ ransaced_matches, kp1, kp2 };
 }
 
 }  // namespace ggck

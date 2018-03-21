@@ -12,6 +12,7 @@
 #include "overlapping_image_set.h"
 #include "partition.h"
 #include "point_match.h"
+#include "point_set.h"
 
 using ggck::ImageMetadata;
 using ggck::OverlappingImageSet;
@@ -36,11 +37,11 @@ int main(int argc, char* argv[]) {
   for (auto overlap = overlaps.begin(); overlap != overlaps.end(); overlap++) {
     for (auto image_pair = overlap->ImagePairsBegin();
          image_pair != overlap->ImagePairsEnd(); image_pair++) {
-      cv::Mat matches =
-          PointMatches(overlap->ComputeImageMask(image_pair->first),
-                       overlap->ComputeImageMask(image_pair->second));
-      cv::imshow("Matching points", matches);
-      cv::waitKey(0);
+      ggck::DensePointsAndMatches dpMatches =
+          ComputePointMatches(overlap->ComputeImageMask(image_pair->first),
+                              overlap->ComputeImageMask(image_pair->second));
+      //cv::imshow("Matching points", matches);
+      //cv::waitKey(0);
     }
   }
 
