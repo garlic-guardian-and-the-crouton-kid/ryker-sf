@@ -39,7 +39,7 @@ Polygon_2 GeoPolygon(const ImageMetadata& image_metadata) {
                  image_metadata.WarpedImageCornersEnd(),
                  std::back_inserter(vertices),
                  [image_metadata](const cv::Point2f& corner) {
-                   return RoundToPoint(image_metadata.WarpedImageToGeo(corner));
+                   return RoundToPoint(image_metadata.ImageToGeo(corner));
                  });
   return Polygon_2(vertices.begin(), vertices.end());
 }

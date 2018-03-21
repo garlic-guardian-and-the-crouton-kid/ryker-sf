@@ -41,11 +41,11 @@ int main() {
   };
 
   if (!im1.image.data) {
-	  std::cout << "Could not open or find image 1" << std::endl;
+    std::cout << "Could not open or find image 1" << std::endl;
     return 1;
   }
   if (!im2.image.data) {
-	  std::cout << "Could not open or find image 2" << std::endl;
+    std::cout << "Could not open or find image 2" << std::endl;
     return 1;
   }
   std::cout << "About to get points" << std::endl;

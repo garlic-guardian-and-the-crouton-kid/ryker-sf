@@ -15,7 +15,7 @@ CvPolygon CgalToCvPolygon(const ImageMetadata& image,
   std::vector<cv::Point> points;
   std::transform(face_polygon.vertices_begin(), face_polygon.vertices_end(),
                  std::back_inserter(points), [image](const Point_2& point) {
-                   return image.GeoToWarpedImage(cv::Point2f(
+                   return image.GeoToImage(cv::Point2f(
                        CGAL::to_double(point.x()), CGAL::to_double(point.y())));
                  });
 

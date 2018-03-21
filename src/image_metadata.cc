@@ -65,19 +65,8 @@ Point2f MatToPoint(const cv::Mat& M) {
   return Point2f(M.at<double>(0, 0), M.at<double>(1, 0));
 }
 
-// Temporary data structure used to track the smallest observed distance
-// between two points during corner matching.
-struct MatchCandidate {
-  Point2i point;
-  double distance;
-};
-
-// Given two vectors of points representing the corners of polygons (in no
-// particular order), rearrange the vector so that corresponding corners
-// align across both vectors. That is, given input vectors containing A,B,C,D
-// and a,b,c,d, respectively (in no particular order), return the output vectors
-// {A,B,C,D} and {a,b,c,d} (A aligns with a; B aligns with b, etc).
-//
+// Returns a list of coordinates representing the corners of the warped image
+// inside the GeoTIFF. That is, returns corners a,b,c,d in the diagram below.
 //   A ------------------ B
 //     |        ~\ b    |
 //     | a   ~    \     |
@@ -87,39 +76,6 @@ struct MatchCandidate {
 //     |    \    ~  c   |
 //     |   d \~         |
 //   D ------------------ C
-std::pair<std::vector<Point2i>, std::vector<Point2i>> MatchClosestPoints(
-    std::vector<Point2i> points1, std::vector<Point2i> points2) {
-  std::map<Point2i, MatchCandidate> matching_points;
-
-  for (auto p1 = points1.begin(); p1 != points1.end(); p1++) {
-    for (auto p2 = points2.begin(); p2 != points2.end(); p2++) {
-      double distance = cv::norm(*p1 - *p2);
-      auto match = matching_points.find(*p1);
-      if (match == matching_points.end() || distance < match->second.distance) {
-        // p1 does not have a match, or p1 has a match, but it is farther away
-        // from p2.
-        matching_points[*p1] = MatchCandidate{*p2, distance};
-      }
-    }
-  }
-
-  // TODO(justinmanley): Add a check to confirm that each point in points1 is
-  // matched with a unique point in points2.
-
-  // These vectors will contain the matched points in the same order; that is,
-  // matched_points1[i] will contain the point matched_points2[i].
-  std::vector<Point2i> matched_points1;
-  std::vector<Point2i> matched_points2;
-  for (auto p = matching_points.begin(); p != matching_points.end(); p++) {
-    matched_points1.push_back(p->first);
-    matched_points2.push_back(p->second.point);
-  }
-
-  return std::make_pair(matched_points1, matched_points2);
-}
-
-// Returns a list of coordinates representing the corners of the warped image
-// inside the GeoTIFF.
 std::vector<Point2i> WarpedCorners(const std::string& filename) {
   std::vector<std::vector<cv::Point>> contours;
   std::vector<cv::Vec4i> hierarchy;
@@ -154,25 +110,6 @@ std::vector<Point2i> WarpedCorners(const std::string& filename) {
   return warped_corners;
 }
 
-// Returns the affine transformation which maps the corners of the GeoTIFF onto
-// the corners of the warped image inside the GeoTIFF.
-cv::Mat ImageWarpAffineMap(const std::vector<Point2i> image_corners,
-                           const std::vector<Point2i> warped_corners) {
-  std::pair<std::vector<Point2i>, std::vector<Point2i>> matched_corners =
-      MatchClosestPoints(image_corners, warped_corners);
-
-  // The corners bounding the GeoTIFF (i.e. (0,0), (0, height), etc).
-  std::vector<Point2f> matched_image_corners;
-  cv::Mat(matched_corners.first).copyTo(matched_image_corners);
-
-  // The corners bounding the warped image inside the GeoTIFF.
-  std::vector<Point2f> matched_warped_corners;
-  cv::Mat(matched_corners.second).copyTo(matched_warped_corners);
-
-  return estimateRigidTransform(matched_image_corners, matched_warped_corners,
-                                /* fullAffine= */ true);
-}
-
 }  // namespace
 
 ImageMetadata::ImageMetadata(const std::string& image_filename)
@@ -190,9 +127,7 @@ ImageMetadata::ImageMetadata(const std::string& image_filename)
 
   size = cv::Size(dataset->GetRasterXSize(), dataset->GetRasterYSize());
   warped_image_corners = WarpedCorners(image_filename);
-  pixels_to_geo_affine_map = AffineMapMatrix(geoTransform);
-  image_warp_affine_map =
-      ImageWarpAffineMap(ImageCorners(size), warped_image_corners);
+  image_to_geo_affine_map = AffineMapMatrix(geoTransform);
 }
 
 ConstCornerIterator ImageMetadata::WarpedImageCornersBegin() const {
@@ -203,21 +138,14 @@ ConstCornerIterator ImageMetadata::WarpedImageCornersEnd() const {
   return warped_image_corners.end();
 }
 
-Point2f ImageMetadata::GeoToWarpedImage(const Point2f& geo_coords) const {
-  cv::Mat geo_to_pixels_affine_map = cv::Mat(2, 3, CV_64F);
-  cv::invertAffineTransform(pixels_to_geo_affine_map, geo_to_pixels_affine_map);
-  return MatToPoint(image_warp_affine_map *
-                    Homogenize(MatToPoint(geo_to_pixels_affine_map *
-                                          Homogenize(geo_coords))));
+Point2f ImageMetadata::GeoToImage(const Point2f& geo_coords) const {
+  cv::Mat geo_to_image_affine_map = cv::Mat(2, 3, CV_64F);
+  cv::invertAffineTransform(image_to_geo_affine_map, geo_to_image_affine_map);
+  return MatToPoint(geo_to_image_affine_map * Homogenize(geo_coords));
 }
 
-Point2f ImageMetadata::WarpedImageToGeo(const Point2f& pixel_coords) const {
-  cv::Mat geo_corners_to_image_corners_map = cv::Mat(2, 3, CV_64F);
-  cv::invertAffineTransform(image_warp_affine_map,
-                            geo_corners_to_image_corners_map);
-  return MatToPoint(pixels_to_geo_affine_map *
-                    Homogenize(MatToPoint(geo_corners_to_image_corners_map *
-                                          Homogenize(pixel_coords))));
+Point2f ImageMetadata::ImageToGeo(const Point2f& pixel_coords) const {
+  return MatToPoint(image_to_geo_affine_map * Homogenize(pixel_coords));
 }
 
 cv::Size ImageMetadata::ImageSize() const { return size; }
