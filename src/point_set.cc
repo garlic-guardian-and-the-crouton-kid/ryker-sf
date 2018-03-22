@@ -45,6 +45,9 @@ void PointSet::Add(PointMatches matches, ImagePair metadata) {
     }
   }
 
+  printf("Got %i point matches from overlap of images %i and %i \n", 
+          matches.size(), indices.first, indices.second);
+
   // store matches and calculated indices
   points.push_back(matches);
   imageIndices.push_back(indices);
@@ -64,7 +67,7 @@ void PointSet::Add(DensePointsAndMatches dpMatches, ImagePair metadata) {
  * see vmask[i, j], max. size n*m*mnp
  */
 SbaMeasurementInfo PointSet::GetSbaMeasurementInfo() {
-  int numFrames = metadataList.size();
+  int numFrames = static_cast<int>(metadataList.size());
 
   // initialize mask with zeros
   std::vector<char> mask(numMatches * metadataList.size());
@@ -115,7 +118,7 @@ SbaMeasurementInfo PointSet::GetSbaMeasurementInfo() {
 //    (f, aspect ratio, cx, cy, skewness)
 std::vector<double> PointSet::GetSbaInitialParams(int cnp) {
   double altitude = 2000;  // assume aircraft is flying at 2000m
-  int m = metadataList.size();
+  int m = static_cast<int>(metadataList.size());
   int n = numMatches;
   int pnp = 3;  // points are Euclidian in 3D space
   // allocate initial vector with space for cnp parameters per camera and
@@ -134,8 +137,8 @@ std::vector<double> PointSet::GetSbaInitialParams(int cnp) {
       // f, u0, v0, ar, s
       // To calculate f, get the length of the image horizontal in the world
       // frame
-      cv::Point2f wEnd = image.ImageToGeo(cv::Point2f(0, w));
-      cv::Point2f wOrigin = image.ImageToGeo(cv::Point2f(0, 0));
+      cv::Point2f wEnd = image.ImageToGeo(cv::Point2f(0.0, static_cast<float>(w)));
+      cv::Point2f wOrigin = image.ImageToGeo(cv::Point2f(0.0, 0.0));
       double wWidth = cv::norm(wOrigin - wEnd);
       params.f = w / wWidth * altitude;
       params.u0 = image.ImageSize().width / 2.0;
@@ -188,7 +191,7 @@ std::vector<double> PointSet::GetSbaInitialParams(int cnp) {
           metadataList[imageIndices[i].first].ImageToGeo(match.first);
       cv::Point2f secondLoc =
           metadataList[imageIndices[i].second].ImageToGeo(match.second);
-      cv::Point2f avgLoc = (firstLoc + secondLoc) / 2;
+      cv::Point2f avgLoc = (firstLoc + secondLoc) / 2.0;
 
       // Store point in initial estimates array
       // As above, we invert north/south to match the camera frame of reference
@@ -215,11 +218,11 @@ std::vector<cv::Point3d> PointSet::GetPointCloud() {
   for (int i = 0; i < imageIndices.size(); i++) {
     for (auto const& match : points[i]) {
       // Take the avgerage estimaged Geo location for each point
-      cv::Point2f firstLoc =
+      cv::Point2d firstLoc =
           metadataList[imageIndices[i].first].ImageToGeo(match.first);
-      cv::Point2f secondLoc =
+      cv::Point2d secondLoc =
           metadataList[imageIndices[i].second].ImageToGeo(match.second);
-      cv::Point2f avgLoc = (firstLoc + secondLoc) / 2;
+      cv::Point2d avgLoc = (firstLoc + secondLoc) / 2.0;
 
       // Store point in pointcloud structure
       // As above, we invert north/south to match the camera frame of reference

@@ -491,6 +491,14 @@ void jacobian(int j, int i, double *aj, double *bi, double *Aij, double *Bij,
   }
 }
 
+void PrintCamParams(double cp[11]) {
+  std::printf(
+    "f: %f, u0: %f, v0: %f, ar: %f, s: %f, r0: %f, r1: %f, r2: %f, t0: %f, "
+    "t1: %f, t2: %f \n",
+    cp[0], cp[1], cp[2], cp[3], cp[4], cp[5], cp[6], cp[7], cp[8], cp[9],
+    cp[10]);
+}
+
 std::vector<cv::Point3d> RunSba(PointSet *pointSet) {
   int cnp = 11;
   int pnp = 3;
@@ -507,7 +515,7 @@ std::vector<cv::Point3d> RunSba(PointSet *pointSet) {
   */
   opts[0] = SBA_INIT_MU;
   opts[1] = SBA_STOP_THRESH;
-  opts[2] = 1E-15;
+  opts[2] = 1E-18;
   opts[3] = SBA_STOP_THRESH;
   // opts[3]=0.05*numprojs; // uncomment to force termination if the average
   // reprojection error drops below 0.05
@@ -528,7 +536,7 @@ std::vector<cv::Point3d> RunSba(PointSet *pointSet) {
   * Note that a value of 3 does not make sense
   */
   globs.nccalib =
-      2; /* number of intrinsics to keep fixed, must be between 0 and 5 */
+      0; /* number of intrinsics to keep fixed, must be between 0 and 5 */
   globs.ncdist = -9999;
 
   globs.ptparams = NULL;
@@ -537,19 +545,10 @@ std::vector<cv::Point3d> RunSba(PointSet *pointSet) {
   double reprojection[2];
   reproject(0, 0, &initParams[0], &initParams[numFrames * cnp], reprojection,
             reinterpret_cast<void *>(&globs));
-  std::printf(
-      "f: %f, u0: %f, v0: %f, ar: %f, s: %f, r0: %f, r1: %f, r2: %f, t0: %f, "
-      "t1: %f, t2: %f \n",
-      initParams[0], initParams[1], initParams[2], initParams[3], initParams[4],
-      initParams[5], initParams[6], initParams[7], initParams[8], initParams[9],
-      initParams[10]);
-  std::printf("point x: %f, point y: %f, point z: %f \n",
-              initParams[numFrames * cnp], initParams[numFrames * cnp + 1],
-              initParams[numFrames * cnp + 2]);
-  std::printf("Reprojection x: %f, Reprojection y: %f \n", reprojection[0],
-              reprojection[1]);
-  std::printf("Original x: %f, Original y: %f \n",
-              measurementInfo.measurements[0], measurementInfo.measurements[1]);
+
+  fprintf(stdout,
+          "Begining bundle adjustment on %i frames with %i points\n",
+          numFrames, numPoints3D);
 
   int n = sba_motstr_levmar(
       numPoints3D, 0, numFrames, 0, &measurementInfo.vmask[0], &initParams[0],
@@ -569,7 +568,7 @@ std::vector<cv::Point3d> RunSba(PointSet *pointSet) {
     point.x = initParams[pIndex];
     point.y = initParams[pIndex + 1];
     point.z = initParams[pIndex + 2];
-    pIndex += mnp;
+    pIndex += pnp;
   }
   return pointCloud;
 }
