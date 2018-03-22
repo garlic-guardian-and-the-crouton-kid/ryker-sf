@@ -34,10 +34,13 @@ std::vector<ImageMetadata> GetImageMetadata(int argc, char* argv[]) {
 }
 
 void WritePointCloudToFile(std::vector<cv::Point3d> pc, const char* fname) {
+  int prec = 12;
   std::ofstream file(fname);
   if (file.is_open()) {
     for (auto& point : pc) {
-      file << point.x << "," << point.y << "," << point.z << std::endl;
+      file << std::setprecision(prec) << point.x << "," 
+           << std::setprecision(prec) << point.y << "," 
+           << std::setprecision(prec) << point.z << std::endl;
     }
     file.close();
   } else {
