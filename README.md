@@ -50,6 +50,12 @@ images taken by Harrison Ryker of San Francisco in 1938, digitized by the David
 Rumsey Map Collection. The line number in images.txt indicates the number of the
 image in the Map Collection.
 
+NOTE: All of the images are in their original state, as georeferenced by the
+David Rumsey Map Collection, except for image 61, which had only 2 control points.
+I added several more ground control points in order to orthorectify this image.
+  - Images 143 and 148 are missing because they lack sufficient features to identify
+    point matches, between the image and the satellite layer, even by hand.
+
 ### Preprocessing images
 The GeoTIFF images available on Georeferencer ([example][]) are extremely large
 (e.g. 11347x13517). Resizing the images is necessary to make the pipeline
