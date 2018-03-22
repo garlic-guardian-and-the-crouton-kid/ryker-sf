@@ -4,13 +4,15 @@
 #ifndef INCLUDE_POINT_SET_H_
 #define INCLUDE_POINT_SET_H_
 
-#include "overlapping_image_set.h"
 #include "point_match.h"
 
 #include <vector>
+#include <utility>
 
 #include <opencv2/features2d.hpp>
 #include <opencv2/opencv.hpp>
+
+#include "overlapping_image_set.h"
 
 namespace ggck {
 
@@ -18,21 +20,25 @@ namespace ggck {
 typedef std::vector<std::pair<cv::Point2d, cv::Point2d>> PointMatches;
 
 struct SbaMeasurementInfo {
-  // Double vector with proper ordering for use with SBA 
+  // Double vector with proper ordering for use with SBA
   std::vector<double> measurements;
 
-  // a char* vector with the indicator mask of which points appear in which images for use with SBA
-  // visibility mask: vmask[i, j]=1 if point i visible in image j, 0 otherwise. nxm
+  // a char* vector with the indicator mask of which points appear in which
+  // images for use with SBA
+  // visibility mask: vmask[i, j]=1 if point i visible in image j, 0 otherwise.
+  // nxm
   std::vector<char> vmask;
 };
 
-// Converts from an array of dense points adn matches to a PointMatches structure
-PointMatches DensePointsAndMatchesToPointMatches(DensePointsAndMatches dpMatches);
+// Converts from an array of dense points adn matches to a PointMatches
+// structure
+PointMatches DensePointsAndMatchesToPointMatches(
+    DensePointsAndMatches dpMatches);
 
 class PointSet {
-public:
-  // Constructor accepts a list of all metadata 
-  PointSet(const std::vector<ImageMetadata>& metadataList);
+ public:
+  // Constructor accepts a list of all metadata
+  explicit PointSet(const std::vector<ImageMetadata>& metadataList);
 
   // Stores matches and metadata
   void Add(PointMatches matches, ImagePair metadata);
@@ -41,17 +47,20 @@ public:
   // Calculates and returns the measurement vector and mask for use with SBA
   SbaMeasurementInfo GetSbaMeasurementInfo();
 
-private:
-  // Arrays of point correspondences. ptsA[i][j] refers to the ith match from image correspondence j
+ private:
+  // Arrays of point correspondences. ptsA[i][j] refers to the ith match from
+  // image correspondence j
   std::vector<PointMatches> points;
 
   // Number of unique 3D points in pointss
   int numMatches;
 
-  // Ordered vector of image metadata. Used to assign numerical indices to images
+  // Ordered vector of image metadata. Used to assign numerical indices to
+  // images
   const std::vector<ImageMetadata> metadataList;
 
-  // Array of image index pairs. Can be used to index into metadata list to retrieve metadata
+  // Array of image index pairs. Can be used to index into metadata list to
+  // retrieve metadata
   // for a particular pair in points
   std::vector<std::pair<int, int>> imageIndices;
 };

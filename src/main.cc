@@ -20,19 +20,19 @@ using ggck::OverlappingImageSet;
 // The image filenames should be provided as the only command-line arguments
 // to the program.
 std::vector<ImageMetadata> GetImageMetadata(int argc, char* argv[]) {
-	std::vector<ImageMetadata> image_metadata;
-	for (int i = 1; i < argc; i++) {
-		std::string image_filename = std::string(argv[i]);
-		image_metadata.push_back(ImageMetadata(image_filename));
-	}
-	return image_metadata;
+  std::vector<ImageMetadata> image_metadata;
+  for (int i = 1; i < argc; i++) {
+    std::string image_filename = std::string(argv[i]);
+    image_metadata.push_back(ImageMetadata(image_filename));
+  }
+  return image_metadata;
 }
 
 int main(int argc, char* argv[]) {
   GDALAllRegister();
 
-  std::vector<OverlappingImageSet> overlaps = ComputeOverlaps(
-			GetImageMetadata(argc, argv));
+  std::vector<OverlappingImageSet> overlaps =
+      ComputeOverlaps(GetImageMetadata(argc, argv));
 
   for (auto overlap = overlaps.begin(); overlap != overlaps.end(); overlap++) {
     for (auto image_pair = overlap->ImagePairsBegin();
@@ -40,8 +40,8 @@ int main(int argc, char* argv[]) {
       ggck::DensePointsAndMatches dpMatches =
           ComputePointMatches(overlap->ComputeImageMask(image_pair->first),
                               overlap->ComputeImageMask(image_pair->second));
-      //cv::imshow("Matching points", matches);
-      //cv::waitKey(0);
+      // cv::imshow("Matching points", matches);
+      // cv::waitKey(0);
     }
   }
 

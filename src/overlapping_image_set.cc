@@ -19,7 +19,7 @@ CvPolygon CgalToCvPolygon(const ImageMetadata& image,
                        CGAL::to_double(point.x()), CGAL::to_double(point.y())));
                  });
 
-  std::vector<int> npoints = { static_cast<int>(points.size()) };
+  std::vector<int> npoints = {static_cast<int>(points.size())};
   int ncontours = 1;
 
   return CvPolygon{

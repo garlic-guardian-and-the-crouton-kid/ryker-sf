@@ -10,14 +10,14 @@
 
 namespace ggck {
 
-// Converts from an array of dense points and matches to a PointMatches structure
-PointMatches DensePointsAndMatchesToPointMatches(DensePointsAndMatches dpMatches)
-{
+// Converts from an array of dense points and matches to a PointMatches
+// structure
+PointMatches DensePointsAndMatchesToPointMatches(
+    DensePointsAndMatches dpMatches) {
   PointMatches pm;
   pm.reserve(dpMatches.matches.size());
 
-  for (auto & dpMatch : dpMatches.matches)
-  {
+  for (auto& dpMatch : dpMatches.matches) {
     std::pair<cv::Point2d, cv::Point2d> pair;
     pair.first = dpMatches.kp1[dpMatch.queryIdx].pt;
     pair.second = dpMatches.kp2[dpMatch.trainIdx].pt;
@@ -27,25 +27,19 @@ PointMatches DensePointsAndMatchesToPointMatches(DensePointsAndMatches dpMatches
   return pm;
 }
 
-PointSet::PointSet(const std::vector<ImageMetadata>& metadataList):
-  metadataList(metadataList)
-{
+PointSet::PointSet(const std::vector<ImageMetadata>& metadataList)
+    : metadataList(metadataList) {
   numMatches = 0;
 }
 
-void PointSet::Add(PointMatches matches, ImagePair metadata)
-{
+void PointSet::Add(PointMatches matches, ImagePair metadata) {
   std::pair<int, int> indices;
 
-  //determine which index to assign to metadata
-  for (int i = 0; i < metadataList.size(); i++)
-  {
-    if (metadata.first.Filename() == metadataList[i].Filename())
-    {
+  // determine which index to assign to metadata
+  for (int i = 0; i < metadataList.size(); i++) {
+    if (metadata.first.Filename() == metadataList[i].Filename()) {
       indices.first = i;
-    }
-    else if (metadata.second.Filename() == metadataList[i].Filename())
-    {
+    } else if (metadata.second.Filename() == metadataList[i].Filename()) {
       indices.second = i;
     }
   }
@@ -56,39 +50,34 @@ void PointSet::Add(PointMatches matches, ImagePair metadata)
   numMatches += static_cast<int>(matches.size());
 }
 
-
-void PointSet::Add(DensePointsAndMatches dpMatches, ImagePair metadata)
-{
+void PointSet::Add(DensePointsAndMatches dpMatches, ImagePair metadata) {
   this->Add(DensePointsAndMatchesToPointMatches(dpMatches), metadata);
 }
 
-/* 
+/*
  * From the SBA library:
  * measurements vector: (x_11^T, .. x_1m^T, ..., x_n1^T, .. x_nm^T)^T where
  * x_ij is the projection of the i-th point on the j-th image.
- * NOTE: some of the x_ij might be missing, if point i is not visible in image j;
+ * NOTE: some of the x_ij might be missing, if point i is not visible in image
+ * j;
  * see vmask[i, j], max. size n*m*mnp
  */
-SbaMeasurementInfo PointSet::GetSbaMeasurementInfo() 
-{
+SbaMeasurementInfo PointSet::GetSbaMeasurementInfo() {
   int numFrames = metadataList.size();
 
   // initialize mask with zeros
-  std::vector<char> mask(numMatches * metadataList.size()); 
+  std::vector<char> mask(numMatches * metadataList.size());
   std::fill(mask.begin(), mask.end(), 0);
 
   // initialize measurement vector - each 3D point is observed exactly twice
   // and has two parameters
   std::vector<double> measurements(numMatches * 2 * 2);
 
-  //iterate over all points
+  // iterate over all points
   int matchIndex = 0;
-  for (int i = 0; i < imageIndices.size(); i++)
-  {
-    if (imageIndices[i].first < imageIndices[i].second)
-    {
-      for (auto const & match : points[i])
-      {
+  for (int i = 0; i < imageIndices.size(); i++) {
+    if (imageIndices[i].first < imageIndices[i].second) {
+      for (auto const& match : points[i]) {
         // Store 2d point data in measurements array, ordered by index
         measurements[matchIndex * 4] = match.first.x;
         measurements[matchIndex * 4 + 1] = match.first.y;
@@ -96,16 +85,13 @@ SbaMeasurementInfo PointSet::GetSbaMeasurementInfo()
         measurements[matchIndex * 4 + 3] = match.second.y;
 
         // mark that point is visible in these images in mask array
-        mask[matchIndex*numFrames + imageIndices[i].first] = 1;
-        mask[matchIndex*numFrames + imageIndices[i].second] = 1;
+        mask[matchIndex * numFrames + imageIndices[i].first] = 1;
+        mask[matchIndex * numFrames + imageIndices[i].second] = 1;
 
         matchIndex++;
       }
-    }
-    else if (imageIndices[i].second < imageIndices[i].first)
-    {
-      for (auto const & match : points[i])
-      {
+    } else if (imageIndices[i].second < imageIndices[i].first) {
+      for (auto const& match : points[i]) {
         // Store 2d point data in measurements array, ordered by index
         measurements[matchIndex * 4] = match.second.x;
         measurements[matchIndex * 4 + 1] = match.second.y;
@@ -113,14 +99,14 @@ SbaMeasurementInfo PointSet::GetSbaMeasurementInfo()
         measurements[matchIndex * 4 + 3] = match.first.y;
 
         // mark that point is visible in these images in mask array
-        mask[matchIndex*numFrames + imageIndices[i].first] = 1;
-        mask[matchIndex*numFrames + imageIndices[i].second] = 1;
+        mask[matchIndex * numFrames + imageIndices[i].first] = 1;
+        mask[matchIndex * numFrames + imageIndices[i].second] = 1;
 
         matchIndex++;
       }
     }
   }
-  return SbaMeasurementInfo{ measurements, mask };
+  return SbaMeasurementInfo{measurements, mask};
 }
 
 }  // namespace ggck

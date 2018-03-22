@@ -13,7 +13,8 @@
 
 namespace ggck {
 
-// Struct for passing matches along with a collection of matched & unmatched points
+// Struct for passing matches along with a collection of matched & unmatched
+// points
 struct DensePointsAndMatches {
   std::vector<cv::DMatch> matches;
   std::vector<cv::KeyPoint> kp1;
@@ -21,7 +22,8 @@ struct DensePointsAndMatches {
 };
 
 // Returns a matrix of points corresponded between im1 and im2
-DensePointsAndMatches ComputePointMatches(const MaskedImage& im1, const MaskedImage& im2);
+DensePointsAndMatches ComputePointMatches(const MaskedImage& im1,
+                                          const MaskedImage& im2);
 
 }  // namespace ggck
 

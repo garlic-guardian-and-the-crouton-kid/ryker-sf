@@ -1,13 +1,17 @@
+/*
+ * Copyright 2018 Justin Manley and Joseph Bolling.
+ */
 #include "triangulate.h"
-#include <sba.h>
 #include <math.h>
+#include <sba.h>
 #include <iostream>
 
 /*
  * SBA parameter names:
  * m = number of images
  * n = number of points in 3D space
- * cnp = number of parameters for one camera (intrinsic + rotation + translation)
+ * cnp = number of parameters for one camera (intrinsic + rotation +
+ * translation)
  * pnp = number of parameters for one point (3 in our application X,Y,Z)
  * mnp = numper of parameters for one measurement (2 in our application i,j)
  */
@@ -15,24 +19,24 @@
 namespace ggck {
 
 struct camera_params {
-  double f;     // focal length of camera
-  double cx;    // x center of camera (image coordinates)
-  double cy;    // y center of camera (image coordinates)
-  double roll;  // camera roll
-  double pitch; // camera pitch
-  double yaw;   // camera camera yaw
-  double tx;    // camera x translation
-  double ty;    // camera y translation
-  double tz;    // camera z translation
+  double f;      // focal length of camera
+  double cx;     // x center of camera (image coordinates)
+  double cy;     // y center of camera (image coordinates)
+  double roll;   // camera roll
+  double pitch;  // camera pitch
+  double yaw;    // camera camera yaw
+  double tx;     // camera x translation
+  double ty;     // camera y translation
+  double tz;     // camera z translation
 };
 
 /*
- * calcImgProj - calculates the projection of 3D point into image coordinates. lifted from
+ * calcImgProj - calculates the projection of 3D point into image coordinates.
+ * lifted from
  * SBA library's eucdemo project
  */
-void calcImgProj(double a[5], double qr0[4], double v[3], double t[3], double M[3],
-  double n[2])
-{
+void calcImgProj(double a[5], double qr0[4], double v[3], double t[3],
+                 double M[3], double n[2]) {
   double t1;
   double t10;
   double t12;
@@ -92,8 +96,10 @@ void calcImgProj(double a[5], double qr0[4], double v[3], double t[3], double M[
     t69 = t35 * t58 + t42 * t51 + t57 * t36 - t46 * t52 + t[1];
     t77 = t35 * t52 + t42 * t57 + t46 * t58 - t51 * t36 + t[2];
     t80 = 1 / t77;
-    n[0] = (t1*(t35*t36 + t42 * t46 + t51 * t52 - t57 * t58 + t[0]) + a[4] * t69 + a[1] * t77)*t80;
-    n[1] = (t1*a[3] * t69 + a[2] * t77)*t80;
+    n[0] = (t1 * (t35 * t36 + t42 * t46 + t51 * t52 - t57 * t58 + t[0]) +
+            a[4] * t69 + a[1] * t77) *
+           t80;
+    n[1] = (t1 * a[3] * t69 + a[2] * t77) * t80;
     return;
   }
 }
@@ -109,15 +115,17 @@ void calcImgProj(double a[5], double qr0[4], double v[3], double t[3], double M[
  * -------------------------------------------------------------------------
  * lifted from the SBA library's eucdemo project
  */
-void reproject(int j, int i, double *aj, double *bi, double *xij, void *adata)
-{
+void reproject(int j, int i, double *aj, double *bi, double *xij, void *adata) {
   double *pr0;
   struct globs_ *gl;
 
   gl = (struct globs_ *)adata;
-  //pr0 = gl->rot0params + j * FULLQUATSZ; // full quat for initial rotation estimate
+  // pr0 = gl->rot0params + j * FULLQUATSZ; // full quat for initial rotation
+  // estimate
 
-  calcImgProj(aj, pr0, aj + 5, aj + 5 + 3, bi, xij); // 5 for the calibration + 3 for the quaternion's vector part
+  calcImgProj(
+      aj, pr0, aj + 5, aj + 5 + 3, bi,
+      xij);  // 5 for the calibration + 3 for the quaternion's vector part
 }
 
 /*
@@ -135,11 +143,7 @@ void reproject(int j, int i, double *aj, double *bi, double *xij, void *adata)
  * rcidxs, rcsubs are max(m, n) x 1, allocated by the caller and can be used
  * as working memory
  */
-void jacobian(double *p, struct sba_crsm *idxij, int *rcidxs, int *rcsubs, double *jac, void *adata)
-{
+void jacobian(double *p, struct sba_crsm *idxij, int *rcidxs, int *rcsubs,
+              double *jac, void *adata) {}
 
-}
-
-
-
-} //namespace ggck
+}  // namespace ggck
