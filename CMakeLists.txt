@@ -20,7 +20,7 @@ else()
   include_directories("${GDAL_INCLUDE_DIR}")
   include_directories( ${OpenCV_INCLUDE_DIRS} )
   include_directories( ${SBA_INCLUDE_DIRS} )
-
+  
   set(SOURCES
 		src/image_metadata.cc
 		src/overlapping_image_set.cc
@@ -28,6 +28,7 @@ else()
 		src/point_match.cc
 		src/point_set.cc
 		src/triangulate.cc
+        src/sba_utils.cc
 		src/main.cc)
   
   add_executable(reconstruct_3d ${SOURCES})
