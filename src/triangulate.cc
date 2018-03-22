@@ -1,63 +1,76 @@
 /*
  * Copyright 2018 Justin Manley and Joseph Bolling.
  */
-#include "triangulate.h"
-#include "sba_utils.h"
-#include "point_set.h"
-
-
 #include <math.h>
 #include <sba.h>
 #include <iostream>
 
-/*
- * SBA parameter names:
- * m = number of images
- * n = number of points in 3D space
- * cnp = number of parameters for one camera (intrinsic + rotation +
- * translation)
- * pnp = number of parameters for one point (3 in our application X,Y,Z)
- * mnp = numper of parameters for one measurement (2 in our application i,j)
- */
+#include "point_set.h"
+#include "sba_utils.h"
+#include "triangulate.h"
+
+// SBA parameter names:
+// m = number of images
+// n = number of points in 3D space
+// cnp = number of parameters for one camera (intrinsic + rotation +
+// translation)
+// pnp = number of parameters for one point (3 in our application X,Y,Z)
+// mnp = numper of parameters for one measurement (2 in our application i,j)
 
 namespace ggck {
 
-/* pointers to additional data, used for computed image projections and their jacobians 
- * lifted from SBA's eucdemo project
- */
+// Pointers to additional data, used for computed image projections and their
+// jacobians.
+// Lifted from SBA's eucdemo project
 struct globs_ {
-  double *rot0params; /* initial rotation parameters, combined with a local rotation parameterization */
-  double *intrcalib; /* the 5 intrinsic calibration parameters in the order [fu, u0, v0, ar, skew],
-                      * where ar is the aspect ratio fv/fu.
-                      * Used only when calibration is fixed for all cameras;
-                      * otherwise, it is null and the intrinsic parameters are
-                      * included in the set of motion parameters for each camera
-                      */
-  int nccalib; /* number of calibration parameters that must be kept constant.
-                * 0: all parameters are free
-                * 1: skew is fixed to its initial value, all other parameters vary (i.e. fu, u0, v0, ar)
-                * 2: skew and aspect ratio are fixed to their initial values, all other parameters vary (i.e. fu, u0, v0)
-                * 3: meaningless
-                * 4: skew, aspect ratio and principal point are fixed to their initial values, only the focal length varies (i.e. fu)
-                * 5: all intrinsics are kept fixed to their initial values
-                * >5: meaningless
-                * Used only when calibration varies among cameras
-                */
+  // initial rotation parameters, combined with a local rotation
+  // parameterization
+  double *rot0params;
 
-  int ncdist; /* number of distortion parameters in Bouguet's model that must be kept constant.
-              * 0: all parameters are free
-              * 1: 6th order radial distortion term (kc[4]) is fixed
-              * 2: 6th order radial distortion and one of the tangential distortion terms (kc[3]) are fixed
-              * 3: 6th order radial distortion and both tangential distortion terms (kc[3], kc[2]) are fixed [i.e., only 2nd & 4th order radial dist.]
-              * 4: 4th & 6th order radial distortion terms and both tangential distortion ones are fixed [i.e., only 2nd order radial dist.]
-              * 5: all distortion parameters are kept fixed to their initial values
-              * >5: meaningless
-              * Used only when calibration varies among cameras and distortion is to be estimated
-              */
-  int cnp, pnp, mnp; /* dimensions */
+  // the 5 intrinsic calibration parameters in the order [fu, u0, v0, ar, skew],
+  // where ar is the aspect ratio fv/fu. Used only when calibration is fixed for
+  // all cameras; otherwise, it is null and the intrinsic parameters are
+  // included in the set of motion parameters for each camera
+  double *intrcalib;
 
-  double *ptparams; /* needed only when bundle adjusting for camera parameters only */
-  double *camparams; /* needed only when bundle adjusting for structure parameters only */
+  // number of calibration parameters that must be kept constant.
+  // 0: all parameters are free
+  // 1: skew is fixed to its initial value, all other parameters
+  //    vary (i.e. fu, u0, v0, ar)
+  // 2: skew and aspect ratio are fixed to their initial values,
+  //    all other parameters vary (i.e. fu, u0, v0)
+  // 3: meaningless
+  // 4: skew, aspect ratio and principal point are fixed to their
+  //    initial values, only the focal length varies (i.e. fu)
+  // 5: all intrinsics are kept fixed to their initial values
+  //    >5: meaningless
+  // Used only when calibration varies among cameras
+  int nccalib;
+
+  // number of distortion parameters in Bouguet's model that must be kept
+  // constant.
+  // 0: all parameters are free
+  // 1: 6th order radial distortion term (kc[4]) is fixed
+  // 2: 6th order radial distortion and one of the tangential distortion terms
+  //    (kc[3]) are fixed
+  // 3: 6th order radial distortion and both tangential distortion
+  //    terms (kc[3], kc[2]) are fixed [i.e., only 2nd & 4th order radial dist.]
+  // 4: 4th & 6th order radial distortion terms and both tangential
+  //    distortion ones are fixed [i.e., only 2nd order radial dist.]
+  // 5: all distortion parameters are kept fixed to their initial
+  //    values
+  // >5: meaningless; Used only when calibration varies among cameras and
+  //     distortion is to be estimated
+  int ncdist;
+
+  // dimensions
+  int cnp, pnp, mnp;
+
+  // needed only when bundle adjusting for camera parameters only
+  double *ptparams;
+
+  // needed only when bundle adjusting for structure parameters only
+  double *camparams;
 } globs;
 
 /*
@@ -139,8 +152,8 @@ void calcImgProj(double a[5], double qr0[4], double v[3], double t[3],
  * lifted from SBA library eucdemo project
  */
 void calcImgProjJacKRTS(double a[5], double qr0[4], double v[3], double t[3],
-  double M[3], double jacmKRT[2][11], double jacmS[2][3])
-{
+                        double M[3], double jacmKRT[2][11],
+                        double jacmS[2][3]) {
   double t1;
   double t102;
   double t107;
@@ -272,14 +285,14 @@ void calcImgProjJacKRTS(double a[5], double qr0[4], double v[3], double t[3],
     jacmKRT[0][0] = t60 * t67;
     t68 = a[3];
     t74 = t34 * t57 + t41 * t50 + t56 * t35 - t45 * t51 + t[1];
-    jacmKRT[1][0] = t68 * t74*t67;
+    jacmKRT[1][0] = t68 * t74 * t67;
     jacmKRT[0][1] = 1.0;
     jacmKRT[1][1] = 0.0;
     jacmKRT[0][2] = 0.0;
     jacmKRT[1][2] = 1.0;
     jacmKRT[0][3] = 0.0;
     t76 = a[0];
-    jacmKRT[1][3] = t76 * t74*t67;
+    jacmKRT[1][3] = t76 * t74 * t67;
     jacmKRT[0][4] = t74 * t67;
     jacmKRT[1][4] = 0.0;
     t78 = 1 / t8;
@@ -299,20 +312,23 @@ void calcImgProjJacKRTS(double a[5], double qr0[4], double v[3], double t[3],
     t114 = t97 * t32 + t81 * t25 - t85 * t18;
     t116 = -t85;
     t120 = a[4];
-    t129 = t91 * t57 + t34 * t116 + t97 * t50 + t41 * t107 + t114 * t35 + t56 * t93 - t102 * t51 - t45 * t109
-      ;
+    t129 = t91 * t57 + t34 * t116 + t97 * t50 + t41 * t107 + t114 * t35 +
+           t56 * t93 - t102 * t51 - t45 * t109;
     t131 = a[1];
-    t140 = t91 * t51 + t34 * t109 + t97 * t56 + t41 * t114 + t102 * t57 + t45 * t116 - t107 * t35 - t50 * t93
-      ;
+    t140 = t91 * t51 + t34 * t109 + t97 * t56 + t41 * t114 + t102 * t57 +
+           t45 * t116 - t107 * t35 - t50 * t93;
     t148 = t66 * t66;
     t149 = 1 / t148;
-    t150 = (t76*t60 + t120 * t74 + t131 * t66)*t149;
-    jacmKRT[0][5] = (t76*(t91*t35 + t34 * t93 + t97 * t45 + t41 * t102 + t107 * t51 + t50 * t109 -
-      t114 * t57 - t56 * t116) + t129 * t120 + t131 * t140)*t67 - t150 * t140;
+    t150 = (t76 * t60 + t120 * t74 + t131 * t66) * t149;
+    jacmKRT[0][5] = (t76 * (t91 * t35 + t34 * t93 + t97 * t45 + t41 * t102 +
+                            t107 * t51 + t50 * t109 - t114 * t57 - t56 * t116) +
+                     t129 * t120 + t131 * t140) *
+                        t67 -
+                    t150 * t140;
     t152 = t76 * t68;
     t154 = a[2];
-    t161 = (t152*t74 + t154 * t66)*t149;
-    jacmKRT[1][5] = (t152*t129 + t154 * t140)*t67 - t161 * t140;
+    t161 = (t152 * t74 + t154 * t66) * t149;
+    jacmKRT[1][5] = (t152 * t129 + t154 * t140) * t67 - t161 * t140;
     t164 = -t79 * t3 + t13;
     t167 = -t83 * t3 + t11;
     t170 = -t87 * t3 - t9;
@@ -324,13 +340,16 @@ void calcImgProjJacKRTS(double a[5], double qr0[4], double v[3], double t[3],
     t189 = -t170;
     t194 = t177 * t32 + t164 * t25 - t167 * t18;
     t196 = -t167;
-    t208 = t172 * t57 + t34 * t196 + t177 * t50 + t41 * t187 + t194 * t35 + t56 * t174 - t182 * t51 - t45 *
-      t189;
-    t218 = t172 * t51 + t34 * t189 + t177 * t56 + t41 * t194 + t182 * t57 + t45 * t196 - t187 * t35 - t50 *
-      t174;
-    jacmKRT[0][6] = (t76*(t172*t35 + t34 * t174 + t177 * t45 + t41 * t182 + t187 * t51 + t50 * t189
-      - t194 * t57 - t56 * t196) + t120 * t208 + t131 * t218)*t67 - t150 * t218;
-    jacmKRT[1][6] = (t152*t208 + t154 * t218)*t67 - t161 * t218;
+    t208 = t172 * t57 + t34 * t196 + t177 * t50 + t41 * t187 + t194 * t35 +
+           t56 * t174 - t182 * t51 - t45 * t189;
+    t218 = t172 * t51 + t34 * t189 + t177 * t56 + t41 * t194 + t182 * t57 +
+           t45 * t196 - t187 * t35 - t50 * t174;
+    jacmKRT[0][6] = (t76 * (t172 * t35 + t34 * t174 + t177 * t45 + t41 * t182 +
+                            t187 * t51 + t50 * t189 - t194 * t57 - t56 * t196) +
+                     t120 * t208 + t131 * t218) *
+                        t67 -
+                    t150 * t218;
+    jacmKRT[1][6] = (t152 * t208 + t154 * t218) * t67 - t161 * t218;
     t229 = -t79 * t5 - t15;
     t232 = -t83 * t5 + t9;
     t235 = -t87 * t5 + t11;
@@ -342,13 +361,16 @@ void calcImgProjJacKRTS(double a[5], double qr0[4], double v[3], double t[3],
     t254 = -t235;
     t259 = t242 * t32 + t229 * t25 - t232 * t18;
     t261 = -t232;
-    t273 = t237 * t57 + t261 * t34 + t242 * t50 + t41 * t252 + t259 * t35 + t56 * t239 - t247 * t51 - t45 *
-      t254;
-    t283 = t237 * t51 + t34 * t254 + t242 * t56 + t41 * t259 + t247 * t57 + t45 * t261 - t252 * t35 - t50 *
-      t239;
-    jacmKRT[0][7] = (t76*(t237*t35 + t34 * t239 + t242 * t45 + t41 * t247 + t252 * t51 + t50 * t254
-      - t259 * t57 - t56 * t261) + t120 * t273 + t131 * t283)*t67 - t150 * t283;
-    jacmKRT[1][7] = (t152*t273 + t154 * t283)*t67 - t161 * t283;
+    t273 = t237 * t57 + t261 * t34 + t242 * t50 + t41 * t252 + t259 * t35 +
+           t56 * t239 - t247 * t51 - t45 * t254;
+    t283 = t237 * t51 + t34 * t254 + t242 * t56 + t41 * t259 + t247 * t57 +
+           t45 * t261 - t252 * t35 - t50 * t239;
+    jacmKRT[0][7] = (t76 * (t237 * t35 + t34 * t239 + t242 * t45 + t41 * t247 +
+                            t252 * t51 + t50 * t254 - t259 * t57 - t56 * t261) +
+                     t120 * t273 + t131 * t283) *
+                        t67 -
+                    t150 * t283;
+    jacmKRT[1][7] = (t152 * t273 + t154 * t283) * t67 - t161 * t283;
     jacmKRT[0][8] = t76 * t67;
     jacmKRT[1][8] = 0.0;
     jacmKRT[0][9] = t120 * t67;
@@ -360,30 +382,35 @@ void calcImgProjJacKRTS(double a[5], double qr0[4], double v[3], double t[3],
     t298 = t57 * t57;
     t301 = t35 * t57;
     t304 = t41 * t51;
-    t305 = 2.0*t301 + t41 * t31 - t304;
+    t305 = 2.0 * t301 + t41 * t31 - t304;
     t307 = t35 * t51;
     t308 = t41 * t57;
-    t311 = t307 + 2.0*t308 - t31 * t35;
-    jacmS[0][0] = (t76*(t295 + t296 + t31 * t51 - t298) + t120 * t305 + t131 * t311)*t67 - t150 *
-      t311;
-    jacmS[1][0] = (t152*t305 + t154 * t311)*t67 - t161 * t311;
+    t311 = t307 + 2.0 * t308 - t31 * t35;
+    jacmS[0][0] =
+        (t76 * (t295 + t296 + t31 * t51 - t298) + t120 * t305 + t131 * t311) *
+            t67 -
+        t150 * t311;
+    jacmS[1][0] = (t152 * t305 + t154 * t311) * t67 - t161 * t311;
     t326 = t51 * t51;
     t327 = t298 + t296 + t17 * t35 - t326;
     t329 = t57 * t51;
     t332 = t41 * t35;
-    t333 = 2.0*t329 + t41 * t17 - t332;
-    jacmS[0][1] = (t76*(t301 + 2.0*t304 - t17 * t57) + t120 * t327 + t131 * t333)*t67 - t150 *
-      t333;
-    jacmS[1][1] = (t152*t327 + t154 * t333)*t67 - t161 * t333;
-    t349 = t329 + 2.0*t332 - t24 * t51;
+    t333 = 2.0 * t329 + t41 * t17 - t332;
+    jacmS[0][1] =
+        (t76 * (t301 + 2.0 * t304 - t17 * t57) + t120 * t327 + t131 * t333) *
+            t67 -
+        t150 * t333;
+    jacmS[1][1] = (t152 * t327 + t154 * t333) * t67 - t161 * t333;
+    t349 = t329 + 2.0 * t332 - t24 * t51;
     t352 = t326 + t296 + t24 * t57 - t295;
-    jacmS[0][2] = (t76*(2.0*t307 + t41 * t24 - t308) + t120 * t349 + t131 * t352)*t67 - t150 *
-      t352;
-    jacmS[1][2] = (t152*t349 + t154 * t352)*t67 - t161 * t352;
+    jacmS[0][2] =
+        (t76 * (2.0 * t307 + t41 * t24 - t308) + t120 * t349 + t131 * t352) *
+            t67 -
+        t150 * t352;
+    jacmS[1][2] = (t152 * t349 + t154 * t352) * t67 - t161 * t352;
     return;
   }
 }
-
 
 /*
  * Reprojection function for use with SBA. From the SBA Library:
@@ -401,7 +428,8 @@ void reproject(int j, int i, double *aj, double *bi, double *xij, void *adata) {
   struct globs_ *gl;
 
   // hardcode initial rotation array.
-  // TODO(jbolling) update so that initila rotations are actually carried through from PointSet
+  // TODO(jbolling) update so that initila rotations are actually carried
+  // through from PointSet
   pr0[0] = 1;
   pr0[1] = 0;
   pr0[2] = 0;
@@ -427,7 +455,7 @@ void reproject(int j, int i, double *aj, double *bi, double *xij, void *adata) {
  * rcidxs, rcsubs are max(m, n) x 1, allocated by the caller and can be used
  * as working memory
  */
-void jacobian(int j, int i, double *aj, double *bi, double *Aij, double *Bij, 
+void jacobian(int j, int i, double *aj, double *bi, double *Aij, double *Bij,
               void *adata) {
   struct globs_ *gl;
   double pr0[4];
@@ -435,15 +463,20 @@ void jacobian(int j, int i, double *aj, double *bi, double *Aij, double *Bij,
 
   gl = (struct globs_ *)adata;
   // hardcode initial rotation array.
-  // TODO(jbolling) update so that initila rotations are actually carried through from PointSet
+  // TODO(jbolling) update so that initila rotations are actually carried
+  // through from PointSet
   pr0[0] = 1;
   pr0[1] = 0;
   pr0[2] = 0;
   pr0[3] = 0;
 
-  calcImgProjJacKRTS(aj, pr0, aj + 5, aj + 5 + 3, bi, (double(*)[5 + 6])Aij, (double(*)[3])Bij); // 5 for the calibration + 3 for the quaternion's vector part
+  calcImgProjJacKRTS(
+      aj, pr0, aj + 5, aj + 5 + 3, bi, (double(*)[5 + 6]) Aij,
+      (double(*)[3])
+          Bij);  // 5 for the calibration + 3 for the quaternion's vector part
 
-                                                                                                 /* clear the columns of the Jacobian corresponding to fixed calibration parameters */
+  /* clear the columns of the Jacobian corresponding to fixed calibration
+   * parameters */
   gl = (struct globs_ *)adata;
   ncK = gl->nccalib;
   if (ncK) {
@@ -453,14 +486,12 @@ void jacobian(int j, int i, double *aj, double *bi, double *Aij, double *Bij,
     mnp = gl->mnp;
     j0 = 5 - ncK;
 
-    for (i = 0; i<mnp; ++i, Aij += cnp)
-      for (j = j0; j<5; ++j)
-        Aij[j] = 0.0; // Aij[i*cnp+j]=0.0;
+    for (i = 0; i < mnp; ++i, Aij += cnp)
+      for (j = j0; j < 5; ++j) Aij[j] = 0.0;  // Aij[i*cnp+j]=0.0;
   }
 }
 
-std::vector<cv::Point3d> RunSba(PointSet* pointSet)
-{
+std::vector<cv::Point3d> RunSba(PointSet *pointSet) {
   int cnp = 11;
   int pnp = 3;
   int mnp = 2;
@@ -469,21 +500,26 @@ std::vector<cv::Point3d> RunSba(PointSet* pointSet)
   int verbose = 0;
   int maxIter = 150;
   double opts[SBA_OPTSSZ], info[SBA_INFOSZ];
-  /* I: minim. options [\mu, \epsilon1, \epsilon2, \epsilon3, \epsilon]. Respectively the scale factor for initial \mu,
-  * stoping thresholds for ||J^T e||_inf, ||dp||_2, ||e||_2 and (||e||_2-||e_new||_2)/||e||_2
+  /* I: minim. options [\mu, \epsilon1, \epsilon2, \epsilon3, \epsilon].
+  * Respectively the scale factor for initial \mu,
+  * stoping thresholds for ||J^T e||_inf, ||dp||_2, ||e||_2 and
+  * (||e||_2-||e_new||_2)/||e||_2
   */
-  opts[0] = SBA_INIT_MU; 
-  opts[1] = SBA_STOP_THRESH; 
+  opts[0] = SBA_INIT_MU;
+  opts[1] = SBA_STOP_THRESH;
   opts[2] = 1E-15;
   opts[3] = SBA_STOP_THRESH;
-  //opts[3]=0.05*numprojs; // uncomment to force termination if the average reprojection error drops below 0.05
+  // opts[3]=0.05*numprojs; // uncomment to force termination if the average
+  // reprojection error drops below 0.05
   opts[4] = 0.0;
 
-  std::vector<double>initParams = pointSet->GetSbaInitialParams(cnp);
+  std::vector<double> initParams = pointSet->GetSbaInitialParams(cnp);
   SbaMeasurementInfo measurementInfo = pointSet->GetSbaMeasurementInfo();
 
   /* set up globs structure */
-  globs.cnp = cnp; globs.pnp = pnp; globs.mnp = mnp;
+  globs.cnp = cnp;
+  globs.pnp = pnp;
+  globs.mnp = mnp;
   globs.rot0params = NULL;
   globs.intrcalib = NULL;
   /* specify the number of intrinsic parameters that are to be fixed
@@ -491,34 +527,45 @@ std::vector<cv::Point3d> RunSba(PointSet* pointSet)
   * 0: all free, 1: skew fixed, 2: skew, ar fixed, 4: skew, ar, ppt fixed
   * Note that a value of 3 does not make sense
   */
-  globs.nccalib = 2; /* number of intrinsics to keep fixed, must be between 0 and 5 */
+  globs.nccalib =
+      2; /* number of intrinsics to keep fixed, must be between 0 and 5 */
   globs.ncdist = -9999;
 
   globs.ptparams = NULL;
   globs.camparams = NULL;
 
   double reprojection[2];
-  reproject(0, 0, &initParams[0], &initParams[numFrames*cnp], reprojection, (void*)(&globs));
-  std::printf("f: %f, u0: %f, v0: %f, ar: %f, s: %f, r0: %f, r1: %f, r2: %f, t0: %f, t1: %f, t2: %f \n",
-    initParams[0], initParams[1], initParams[2], initParams[3],
-    initParams[4], initParams[5], initParams[6], initParams[7], initParams[8], initParams[9], initParams[10]);
-  std::printf("point x: %f, point y: %f, point z: %f \n", 
-    initParams[numFrames*cnp], initParams[numFrames*cnp + 1], initParams[numFrames*cnp + 2]);
-  std::printf("Reprojection x: %f, Reprojection y: %f \n", reprojection[0], reprojection[1]);
-  std::printf("Original x: %f, Original y: %f \n", measurementInfo.measurements[0], measurementInfo.measurements[1]);
+  reproject(0, 0, &initParams[0], &initParams[numFrames * cnp], reprojection,
+            reinterpret_cast<void *>(&globs));
+  std::printf(
+      "f: %f, u0: %f, v0: %f, ar: %f, s: %f, r0: %f, r1: %f, r2: %f, t0: %f, "
+      "t1: %f, t2: %f \n",
+      initParams[0], initParams[1], initParams[2], initParams[3], initParams[4],
+      initParams[5], initParams[6], initParams[7], initParams[8], initParams[9],
+      initParams[10]);
+  std::printf("point x: %f, point y: %f, point z: %f \n",
+              initParams[numFrames * cnp], initParams[numFrames * cnp + 1],
+              initParams[numFrames * cnp + 2]);
+  std::printf("Reprojection x: %f, Reprojection y: %f \n", reprojection[0],
+              reprojection[1]);
+  std::printf("Original x: %f, Original y: %f \n",
+              measurementInfo.measurements[0], measurementInfo.measurements[1]);
 
-  int n = sba_motstr_levmar(numPoints3D, 0, numFrames, 0, &measurementInfo.vmask[0], &initParams[0],
-    cnp, pnp, &measurementInfo.measurements[0], NULL, mnp, reproject, jacobian,
-    (void *)(&globs), maxIter , verbose, opts, info);
-  
-  fprintf(stdout, "SBA returned %d in %g iter, reason %g, error %g [initial %g], %d/%d func/fjac evals, %d lin. systems\n", n,
-    info[5], info[6], info[1], info[0], (int)info[7], (int)info[8], (int)info[9]);
+  int n = sba_motstr_levmar(
+      numPoints3D, 0, numFrames, 0, &measurementInfo.vmask[0], &initParams[0],
+      cnp, pnp, &measurementInfo.measurements[0], NULL, mnp, reproject,
+      jacobian, reinterpret_cast<void *>(&globs), maxIter, verbose, opts, info);
+
+  fprintf(stdout,
+          "SBA returned %d in %g iter, reason %g, error %g [initial %g], %d/%d "
+          "func/fjac evals, %d lin. systems\n",
+          n, info[5], info[6], info[1], info[0], static_cast<int>(info[7]),
+          static_cast<int>(info[8]), static_cast<int>(info[9]));
 
   std::vector<cv::Point3d> pointCloud(numPoints3D);
   int pIndex = numFrames * cnp;
   // iterate over returned values to put back into a structured array
-  for (auto & point : pointCloud)
-  {
+  for (auto &point : pointCloud) {
     point.x = initParams[pIndex];
     point.y = initParams[pIndex + 1];
     point.z = initParams[pIndex + 2];

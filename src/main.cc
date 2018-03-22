@@ -1,6 +1,9 @@
 /*
  * Copyright 2018 Justin Manley and Joseph Bolling.
  */
+#include <fstream>
+#include <iostream>
+
 #include "gdal.h"
 #include "gdal_priv.h"
 
@@ -14,9 +17,6 @@
 #include "point_match.h"
 #include "point_set.h"
 #include "triangulate.h"
-
-#include <iostream>
-#include <fstream>
 
 using ggck::ImageMetadata;
 using ggck::OverlappingImageSet;
@@ -33,18 +33,14 @@ std::vector<ImageMetadata> GetImageMetadata(int argc, char* argv[]) {
   return image_metadata;
 }
 
-void WritePointCloudToFile(std::vector<cv::Point3d> pc, const char * fname) {
+void WritePointCloudToFile(std::vector<cv::Point3d> pc, const char* fname) {
   std::ofstream file(fname);
-  if (file.is_open())
-  {
-    for (auto & point : pc)
-    {
+  if (file.is_open()) {
+    for (auto& point : pc) {
       file << point.x << "," << point.y << "," << point.z << std::endl;
     }
     file.close();
-  }
-  else
-  {
+  } else {
     std::cout << "Unable to open output file";
   }
 }

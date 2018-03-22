@@ -1,12 +1,14 @@
 /*
-* Utility functions associated with the SBA libary.
-* Heavily based on the SBA sample project eucdemo
-*/
+ * Copyright 2018 Justin Manley and Joseph Bolling.
+ *
+ * Utility functions associated with the SBA libary.
+ * Heavily based on the SBA sample project eucdemo
+ */
 #ifndef INCLUDE_SBA_UTILS_H_
 #define INCLUDE_SBA_UTILS_H_
 
 namespace ggck {
-  
+
 // Struct with camera parameters for cnp = 11
 // This struct uses the quaternion description of rotation, and so has an
 // extra degree of freedom (q3). It is reduced to 11 DoF using the quat2vec
@@ -31,8 +33,10 @@ struct CameraParams {
  * input quaternion into a unit one with a non-negative scalar part. Remaining
  * parameters are left unchanged.
  *
- * Input parameter layout: intrinsics (5, optional), distortion (5, optional), rot. quaternion (4), translation (3)
- * Output parameter layout: intrinsics (5, optional), distortion (5, optional), rot. quaternion vector part (3), translation (3)
+ * Input parameter layout: intrinsics (5, optional), distortion (5, optional),
+ * rot. quaternion (4), translation (3)
+ * Output parameter layout: intrinsics (5, optional), distortion (5, optional),
+ * rot. quaternion vector part (3), translation (3)
  * Lifted from SBA eucdemo project
  */
 void quat2vec(double *inp, int nin, double *outp, int nout);
@@ -41,12 +45,14 @@ void quat2vec(double *inp, int nin, double *outp, int nout);
  * a full unit quaternion instead of its input 3-vector part. Remaining
  * parameters are left unchanged.
  *
- * Input parameter layout: intrinsics (5, optional), distortion (5, optional), rot. quaternion vector part (3), translation (3)
- * Output parameter layout: intrinsics (5, optional), distortion (5, optional), rot. quaternion (4), translation (3)
+ * Input parameter layout: intrinsics (5, optional), distortion (5, optional),
+ * rot. quaternion vector part (3), translation (3)
+ * Output parameter layout: intrinsics (5, optional), distortion (5, optional),
+ * rot. quaternion (4), translation (3)
  * Lifted from SBA eucdemo project
  */
 void vec2quat(double *inp, int nin, double *outp, int nout);
 
-} //namespace ggck
+}  // namespace ggck
 
-#endif //INCLUDE_SBA_UTILS_H_
+#endif  // INCLUDE_SBA_UTILS_H_

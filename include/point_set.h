@@ -59,7 +59,7 @@ class PointSet {
   // Returns the total number of images
   int NumFrames();
 
-private:
+ private:
   // Arrays of point correspondences. ptsA[i][j] refers to the ith match from
   // image correspondence j
   std::vector<PointMatches> points;

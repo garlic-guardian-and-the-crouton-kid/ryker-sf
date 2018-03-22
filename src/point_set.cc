@@ -1,11 +1,11 @@
 /*
  * Copyright 2018 Justin Manley and Joseph Bolling.
  */
-#include "point_set.h"
-#include "sba_utils.h"
-
 #include <iostream>
 #include <memory>
+
+#include "point_set.h"
+#include "sba_utils.h"
 
 #include <opencv2/features2d.hpp>
 
@@ -113,29 +113,27 @@ SbaMeasurementInfo PointSet::GetSbaMeasurementInfo() {
 // Returns an initial parameter estimate vector for use with SBA
 // if cnp = 11: constructs vector assuming a 5-DoF Camera projection matrix
 //    (f, aspect ratio, cx, cy, skewness)
-std::vector<double> PointSet::GetSbaInitialParams(int cnp)
-{
-  double altitude = 2000;  //assume aircraft is flying at 2000m
+std::vector<double> PointSet::GetSbaInitialParams(int cnp) {
+  double altitude = 2000;  // assume aircraft is flying at 2000m
   int m = metadataList.size();
   int n = numMatches;
-  int pnp = 3;  //points are Euclidian in 3D space
-  // allocate initial vector with space for cnp parameters per camera and 
+  int pnp = 3;  // points are Euclidian in 3D space
+  // allocate initial vector with space for cnp parameters per camera and
   // pnp parameters per point
-  std::vector<double> p(m*cnp + n*pnp);
-  
+  std::vector<double> p(m * cnp + n * pnp);
+
   int pIndex = 0;
-  if (cnp == 11)
-  {
+  if (cnp == 11) {
     // iterate over cameras to set parameters
-    for (auto & image : metadataList)
-    {
+    for (auto& image : metadataList) {
       CameraParams params;
       int h = image.ImageSize().height;
       int w = image.ImageSize().width;
 
       // camera instrinsics -
       // f, u0, v0, ar, s
-      // To calculate f, get the length of the image horizontal in the world frame
+      // To calculate f, get the length of the image horizontal in the world
+      // frame
       cv::Point2f wEnd = image.ImageToGeo(cv::Point2f(0, w));
       cv::Point2f wOrigin = image.ImageToGeo(cv::Point2f(0, 0));
       double wWidth = cv::norm(wOrigin - wEnd);
@@ -146,9 +144,11 @@ std::vector<double> PointSet::GetSbaInitialParams(int cnp)
       params.s = 0;
 
       // Calculate Rotation
-      // Since the GeoTIFF images have already been homographically stitched, the image
+      // Since the GeoTIFF images have already been homographically stitched,
+      // the image
       // axes are aligned. For simplicity, we set the world coordinate system
-      // to have the same alignment. The initial rotation estimate for each camera is then
+      // to have the same alignment. The initial rotation estimate for each
+      // camera is then
       // the identity quaternion 1, 0, 0, 0
       params.q0 = 1;
       params.q1 = 0;
@@ -156,36 +156,38 @@ std::vector<double> PointSet::GetSbaInitialParams(int cnp)
       params.q3 = 0;
 
       // Calculate camera translation
-      // The Geo coordinate frame is positive in North and East, while the image frame is 
-      // positive in South and East. To maintain the identity rotation above, we must invert
-      // the North/South and Up/Down axes of the Geo frame to produce the world frame.
+      // The Geo coordinate frame is positive in North and East, while the image
+      // frame is
+      // positive in South and East. To maintain the identity rotation above, we
+      // must invert
+      // the North/South and Up/Down axes of the Geo frame to produce the world
+      // frame.
       cv::Point2f imCenter = cv::Point2f(params.u0, params.v0);
       cv::Point2f camCenter = image.ImageToGeo(imCenter);
-      params.x = - camCenter.x;
+      params.x = -camCenter.x;
       params.y = camCenter.y;
       params.z = altitude;
 
       // Reduce Quaternion representation to 3D & copy to p
-      quat2vec((double*)&params, cnp + 1, &p[pIndex], cnp);
+      quat2vec(reinterpret_cast<double*>(&params), cnp + 1, &p[pIndex], cnp);
 
       pIndex += cnp;
     }
   }
-  
-  if (pIndex != m * cnp)
-  {
-    std::cerr << "index error in GetSbaInitialParams. Expected: " 
-      << m * cnp << " Got: " << pIndex << std::endl;
+
+  if (pIndex != m * cnp) {
+    std::cerr << "index error in GetSbaInitialParams. Expected: " << m * cnp
+              << " Got: " << pIndex << std::endl;
   }
 
   // Iterate over points to set initial estimates
-  for (int i = 0; i < imageIndices.size(); i++)
-  {
-    for (auto const & match : points[i])
-    {
+  for (int i = 0; i < imageIndices.size(); i++) {
+    for (auto const& match : points[i]) {
       // Take the avgerage estimaged Geo location for each point
-      cv::Point2f firstLoc = metadataList[imageIndices[i].first].ImageToGeo(match.first);
-      cv::Point2f secondLoc = metadataList[imageIndices[i].second].ImageToGeo(match.second);
+      cv::Point2f firstLoc =
+          metadataList[imageIndices[i].first].ImageToGeo(match.first);
+      cv::Point2f secondLoc =
+          metadataList[imageIndices[i].second].ImageToGeo(match.second);
       cv::Point2f avgLoc = (firstLoc + secondLoc) / 2;
 
       // Store point in initial estimates array
@@ -199,10 +201,9 @@ std::vector<double> PointSet::GetSbaInitialParams(int cnp)
     }
   }
 
-  if (pIndex != m * cnp + n * pnp)
-  {
+  if (pIndex != m * cnp + n * pnp) {
     std::cerr << "Final index error in GetSbaInitialParams. Expected: "
-      << m * cnp + n * pnp << " Got: " << pIndex << std::endl;
+              << m * cnp + n * pnp << " Got: " << pIndex << std::endl;
   }
 
   return p;
@@ -211,13 +212,13 @@ std::vector<double> PointSet::GetSbaInitialParams(int cnp)
 std::vector<cv::Point3d> PointSet::GetPointCloud() {
   std::vector<cv::Point3d> pointCloud;
   // Iterate over points to set initial estimates
-  for (int i = 0; i < imageIndices.size(); i++)
-  {
-    for (auto const & match : points[i])
-    {
+  for (int i = 0; i < imageIndices.size(); i++) {
+    for (auto const& match : points[i]) {
       // Take the avgerage estimaged Geo location for each point
-      cv::Point2f firstLoc = metadataList[imageIndices[i].first].ImageToGeo(match.first);
-      cv::Point2f secondLoc = metadataList[imageIndices[i].second].ImageToGeo(match.second);
+      cv::Point2f firstLoc =
+          metadataList[imageIndices[i].first].ImageToGeo(match.first);
+      cv::Point2f secondLoc =
+          metadataList[imageIndices[i].second].ImageToGeo(match.second);
       cv::Point2f avgLoc = (firstLoc + secondLoc) / 2;
 
       // Store point in pointcloud structure
@@ -229,12 +230,8 @@ std::vector<cv::Point3d> PointSet::GetPointCloud() {
   return pointCloud;
 }
 
-int PointSet::Num3DPoints() {
-  return numMatches;
-}
+int PointSet::Num3DPoints() { return numMatches; }
 
-int PointSet::NumFrames() {
-  return metadataList.size();
-}
+int PointSet::NumFrames() { return metadataList.size(); }
 
 }  // namespace ggck
