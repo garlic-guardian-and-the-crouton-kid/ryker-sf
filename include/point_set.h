@@ -50,6 +50,12 @@ class PointSet {
   // Returns an initial parameter estimate vector for use with SBA
   std::vector<double> GetSbaInitialParams(int cnp);
 
+  // Returns the total number of 3D points, or the total number of matches
+  int Num3DPoints();
+
+  // Returns the total number of images
+  int NumFrames();
+
 private:
   // Arrays of point correspondences. ptsA[i][j] refers to the ith match from
   // image correspondence j

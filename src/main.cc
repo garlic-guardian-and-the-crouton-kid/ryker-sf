@@ -30,20 +30,23 @@ std::vector<ImageMetadata> GetImageMetadata(int argc, char* argv[]) {
 
 int main(int argc, char* argv[]) {
   GDALAllRegister();
+  std::vector<ImageMetadata> metadata = GetImageMetadata(argc, argv);
 
   std::vector<OverlappingImageSet> overlaps =
-      ComputeOverlaps(GetImageMetadata(argc, argv));
-
+      ComputeOverlaps(GetImageMetadata(argc, argv)););
+  auto points = std::make_unique<ggck::PointSet>(metadata);
+  
   for (auto overlap = overlaps.begin(); overlap != overlaps.end(); overlap++) {
     for (auto image_pair = overlap->ImagePairsBegin();
          image_pair != overlap->ImagePairsEnd(); image_pair++) {
       ggck::DensePointsAndMatches dpMatches =
           ComputePointMatches(overlap->ComputeImageMask(image_pair->first),
                               overlap->ComputeImageMask(image_pair->second));
-      // cv::imshow("Matching points", matches);
-      // cv::waitKey(0);
+                              
+      points->Add(dpMatches,*image_pair);
     }
   }
+  auto sbaInfo = points->GetSbaMeasurementInfo();
 
   return 0;
 }

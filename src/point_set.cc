@@ -208,4 +208,12 @@ std::vector<double> PointSet::GetSbaInitialParams(int cnp)
   return p;
 }
 
+int PointSet::Num3DPoints() {
+  return numMatches;
+}
+
+int PointSet::NumFrames() {
+  return metadataList.size();
+}
+
 }  // namespace ggck
