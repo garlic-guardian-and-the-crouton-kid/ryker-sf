@@ -15,6 +15,9 @@
 #include "point_set.h"
 #include "triangulate.h"
 
+#include <iostream>
+#include <fstream>
+
 using ggck::ImageMetadata;
 using ggck::OverlappingImageSet;
 
@@ -27,6 +30,24 @@ std::vector<ImageMetadata> GetImageMetadata(int argc, char* argv[]) {
     image_metadata.push_back(ImageMetadata(image_filename));
   }
   return image_metadata;
+}
+
+void WritePointCloudToFile(std::vector<cv::Point3d> pc) {
+  const char * const fname = "3Dpoints.csv";
+
+  std::ofstream file(fname);
+  if (file.is_open())
+  {
+    for (auto & point : pc)
+    {
+      file << point.x << "," << point.y << "," << point.z << std::endl;
+    }
+    file.close();
+  }
+  else
+  {
+    std::cout << "Unable to open output file";
+  }
 }
 
 int main(int argc, char* argv[]) {
@@ -49,6 +70,8 @@ int main(int argc, char* argv[]) {
   }
 
   std::vector<cv::Point3d> pointCloud = RunSba(points.get());
+
+  WritePointCloudToFile(pointCloud);
 
   return 0;
 }

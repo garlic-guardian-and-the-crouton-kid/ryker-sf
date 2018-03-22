@@ -474,7 +474,7 @@ std::vector<cv::Point3d> RunSba(PointSet* pointSet)
   */
   opts[0] = SBA_INIT_MU; 
   opts[1] = SBA_STOP_THRESH; 
-  opts[2] = 1E-18;
+  opts[2] = 1E-15;
   opts[3] = SBA_STOP_THRESH;
   //opts[3]=0.05*numprojs; // uncomment to force termination if the average reprojection error drops below 0.05
   opts[4] = 0.0;
