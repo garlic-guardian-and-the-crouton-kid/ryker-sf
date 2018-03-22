@@ -491,7 +491,7 @@ std::vector<cv::Point3d> RunSba(PointSet* pointSet)
   * 0: all free, 1: skew fixed, 2: skew, ar fixed, 4: skew, ar, ppt fixed
   * Note that a value of 3 does not make sense
   */
-  globs.nccalib = 0; /* number of intrinsics to keep fixed, must be between 0 and 5 */
+  globs.nccalib = 2; /* number of intrinsics to keep fixed, must be between 0 and 5 */
   globs.ncdist = -9999;
 
   globs.ptparams = NULL;
