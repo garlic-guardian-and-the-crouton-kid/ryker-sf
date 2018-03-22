@@ -459,19 +459,28 @@ void jacobian(int j, int i, double *aj, double *bi, double *Aij, double *Bij,
   }
 }
 
-std::vector<cv::Point3d> RunSba(PointSet pointSet)
+std::vector<cv::Point3d> RunSba(PointSet* pointSet)
 {
   int cnp = 11;
   int pnp = 3;
   int mnp = 2;
-  int numPoints3D = pointSet.Num3DPoints();
-  int numFrames = pointSet.NumFrames();
+  int numPoints3D = pointSet->Num3DPoints();
+  int numFrames = pointSet->NumFrames();
   int verbose = 0;
   int maxIter = 150;
   double opts[SBA_OPTSSZ], info[SBA_INFOSZ];
+  /* I: minim. options [\mu, \epsilon1, \epsilon2, \epsilon3, \epsilon]. Respectively the scale factor for initial \mu,
+  * stoping thresholds for ||J^T e||_inf, ||dp||_2, ||e||_2 and (||e||_2-||e_new||_2)/||e||_2
+  */
+  opts[0] = SBA_INIT_MU; 
+  opts[1] = SBA_STOP_THRESH; 
+  opts[2] = 1E-18;
+  opts[3] = SBA_STOP_THRESH;
+  //opts[3]=0.05*numprojs; // uncomment to force termination if the average reprojection error drops below 0.05
+  opts[4] = 0.0;
 
-  std::vector<double>initParams = pointSet.GetSbaInitialParams(cnp);
-  SbaMeasurementInfo measurementInfo = pointSet.GetSbaMeasurementInfo();
+  std::vector<double>initParams = pointSet->GetSbaInitialParams(cnp);
+  SbaMeasurementInfo measurementInfo = pointSet->GetSbaMeasurementInfo();
 
   /* set up globs structure */
   globs.cnp = cnp; globs.pnp = pnp; globs.mnp = mnp;
@@ -482,11 +491,21 @@ std::vector<cv::Point3d> RunSba(PointSet pointSet)
   * 0: all free, 1: skew fixed, 2: skew, ar fixed, 4: skew, ar, ppt fixed
   * Note that a value of 3 does not make sense
   */
-  globs.nccalib = 2; /* number of intrinsics to keep fixed, must be between 0 and 5 */
+  globs.nccalib = 0; /* number of intrinsics to keep fixed, must be between 0 and 5 */
   globs.ncdist = -9999;
 
   globs.ptparams = NULL;
   globs.camparams = NULL;
+
+  double reprojection[2];
+  reproject(0, 0, &initParams[0], &initParams[numFrames*cnp], reprojection, (void*)(&globs));
+  std::printf("f: %f, u0: %f, v0: %f, ar: %f, s: %f, r0: %f, r1: %f, r2: %f, t0: %f, t1: %f, t2: %f \n",
+    initParams[0], initParams[1], initParams[2], initParams[3],
+    initParams[4], initParams[5], initParams[6], initParams[7], initParams[8], initParams[9], initParams[10]);
+  std::printf("point x: %f, point y: %f, point z: %f \n", 
+    initParams[numFrames*cnp], initParams[numFrames*cnp + 1], initParams[numFrames*cnp + 2]);
+  std::printf("Reprojection x: %f, Reprojection y: %f \n", reprojection[0], reprojection[1]);
+  std::printf("Original x: %f, Original y: %f \n", measurementInfo.measurements[0], measurementInfo.measurements[1]);
 
   int n = sba_motstr_levmar(numPoints3D, 0, numFrames, 0, &measurementInfo.vmask[0], &initParams[0],
     cnp, pnp, &measurementInfo.measurements[0], NULL, mnp, reproject, jacobian,

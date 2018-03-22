@@ -14,7 +14,7 @@ namespace ggck {
 
 // Wrapper for SBA library's sba_motstr_levmar function. Runs Bundle adjustment
 // using the measurements and initial estimates calculated by PointSet
-std::vector<cv::Point3d> RunSba(PointSet pointSet);
+std::vector<cv::Point3d> RunSba(PointSet * pointSet);
 
 } //namespace ggck
 

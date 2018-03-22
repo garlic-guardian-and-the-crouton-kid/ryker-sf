@@ -13,6 +13,7 @@
 #include "partition.h"
 #include "point_match.h"
 #include "point_set.h"
+#include "triangulate.h"
 
 using ggck::ImageMetadata;
 using ggck::OverlappingImageSet;
@@ -33,7 +34,7 @@ int main(int argc, char* argv[]) {
   std::vector<ImageMetadata> metadata = GetImageMetadata(argc, argv);
 
   std::vector<OverlappingImageSet> overlaps =
-      ComputeOverlaps(GetImageMetadata(argc, argv)););
+      ComputeOverlaps(GetImageMetadata(argc, argv));
   auto points = std::make_unique<ggck::PointSet>(metadata);
   
   for (auto overlap = overlaps.begin(); overlap != overlaps.end(); overlap++) {
@@ -46,7 +47,8 @@ int main(int argc, char* argv[]) {
       points->Add(dpMatches,*image_pair);
     }
   }
-  auto sbaInfo = points->GetSbaMeasurementInfo();
+
+  std::vector<cv::Point3d> pointCloud = RunSba(points.get());
 
   return 0;
 }
