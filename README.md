@@ -1,5 +1,6 @@
 3D reconstruction of 1938 San Francisco
 =======================================
+
 ### Running
 
 To run the pipeline, build the code (see below for instructions), and the run:
@@ -28,7 +29,9 @@ make sba
 ```
 
 It is ok if `cmake .` and `make sba` output warnings. Make sure to run
-`make sba` and not `make`, as the eucsbademo target is broken.
+`make sba` and not `make`, as the eucsbademo target is broken. To link
+sba, you will need lapack and BLAS, which you can install on ubuntu via
+`apt-get`.
 
 To build and run the C++ code, run:
 
@@ -70,6 +73,7 @@ David Rumsey Map Collection, except for image 61, which had only 2 control point
 I added several more ground control points in order to orthorectify this image.
   - Images 143 and 148 are missing because they lack sufficient features to identify
     point matches, between the image and the satellite layer, even by hand.
+  - Bad images: 45, 101
 
 ### Preprocessing images
 The GeoTIFF images available on Georeferencer ([example][]) are extremely large

@@ -6,6 +6,7 @@ find_package( OpenCV QUIET )
 find_package( GDAL QUIET )
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 find_package( sba )
+find_package(LAPACK)
 
 if ( NOT CGAL_FOUND )
   message(STATUS "This program requires the CGAL library, and will not be compiled.")
@@ -15,6 +16,8 @@ elseif ( NOT GDAL_FOUND )
   message(STATUS "This program requires the GDAL library, and will not be compiled")
 elseif ( NOT SBA_FOUND )
   message(STATUS "This program requires the SBA library, and will not be compiled")
+elseif ( NOT LAPACK_FOUND )
+  message(STATUS "This program requires the LAPACK library, and will not be compiled")
 else()
   include( ${CGAL_USE_FILE} )
   include_directories("${GDAL_INCLUDE_DIR}")
@@ -28,11 +31,11 @@ else()
 		src/point_match.cc
 		src/point_set.cc
 		src/triangulate.cc
-        src/sba_utils.cc
+    src/sba_utils.cc
 		src/main.cc)
   
   add_executable(reconstruct_3d ${SOURCES})
   target_include_directories(reconstruct_3d PRIVATE include)
-  target_link_libraries(reconstruct_3d ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES} ${OpenCV_LIBS} ${GDAL_LIBRARY} ${SBA_LIBS})
+	target_link_libraries(reconstruct_3d ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES} ${OpenCV_LIBS} ${GDAL_LIBRARY} ${SBA_LIB} ${LAPACK_LIBRARIES})
 endif()
 
