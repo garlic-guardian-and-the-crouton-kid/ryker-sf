@@ -9,7 +9,7 @@ find_package( sba )
 
 if ( NOT CGAL_FOUND )
   message(STATUS "This program requires the CGAL library, and will not be compiled.")
-elseif ( NOT OPENCV_FOUND )
+elseif ( NOT OpenCV_FOUND )
   message(STATUS "This program requires the OpenCV library, and will not be compiled")
 elseif ( NOT GDAL_FOUND )
   message(STATUS "This program requires the GDAL library, and will not be compiled")
