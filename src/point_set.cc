@@ -161,9 +161,9 @@ std::vector<double> PointSet::GetSbaInitialParams(int cnp)
       // the North/South and Up/Down axes of the Geo frame to produce the world frame.
       cv::Point2f imCenter = cv::Point2f(params.u0, params.v0);
       cv::Point2f camCenter = image.ImageToGeo(imCenter);
-      params.x = camCenter.x;
-      params.y =  - camCenter.y;
-      params.z =  - altitude;
+      params.x = - camCenter.x;
+      params.y = camCenter.y;
+      params.z = altitude;
 
       // Reduce Quaternion representation to 3D & copy to p
       quat2vec((double*)&params, cnp + 1, &p[pIndex], cnp);
