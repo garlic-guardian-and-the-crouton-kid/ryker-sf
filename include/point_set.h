@@ -50,6 +50,9 @@ class PointSet {
   // Returns an initial parameter estimate vector for use with SBA
   std::vector<double> GetSbaInitialParams(int cnp);
 
+  // returns a 3D point cloud vector
+  std::vector<cv::Point3d> GetPointCloud();
+
   // Returns the total number of 3D points, or the total number of matches
   int Num3DPoints();
 

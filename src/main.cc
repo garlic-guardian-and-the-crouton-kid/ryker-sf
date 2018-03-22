@@ -32,8 +32,7 @@ std::vector<ImageMetadata> GetImageMetadata(int argc, char* argv[]) {
   return image_metadata;
 }
 
-void WritePointCloudToFile(std::vector<cv::Point3d> pc) {
-  const char * const fname = "3Dpoints.csv";
+void WritePointCloudToFile(std::vector<cv::Point3d> pc, const char * fname) {
 
   std::ofstream file(fname);
   if (file.is_open())
@@ -69,9 +68,10 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  std::vector<cv::Point3d> pointCloud = RunSba(points.get());
-
-  WritePointCloudToFile(pointCloud);
+  std::vector<cv::Point3d> adjustedPointCloud = RunSba(points.get());
+  std::vector<cv::Point3d> initialPointCloud = points->GetPointCloud();
+  WritePointCloudToFile(adjustedPointCloud, "adjusted_points.csv");
+  WritePointCloudToFile(initialPointCloud, "initial_points.csv");
 
   return 0;
 }

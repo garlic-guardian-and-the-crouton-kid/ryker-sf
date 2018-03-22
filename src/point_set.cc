@@ -208,6 +208,27 @@ std::vector<double> PointSet::GetSbaInitialParams(int cnp)
   return p;
 }
 
+std::vector<cv::Point3d> PointSet::GetPointCloud() {
+  std::vector<cv::Point3d> pointCloud;
+  // Iterate over points to set initial estimates
+  for (int i = 0; i < imageIndices.size(); i++)
+  {
+    for (auto const & match : points[i])
+    {
+      // Take the avgerage estimaged Geo location for each point
+      cv::Point2f firstLoc = metadataList[imageIndices[i].first].ImageToGeo(match.first);
+      cv::Point2f secondLoc = metadataList[imageIndices[i].second].ImageToGeo(match.second);
+      cv::Point2f avgLoc = (firstLoc + secondLoc) / 2;
+
+      // Store point in pointcloud structure
+      // As above, we invert north/south to match the camera frame of reference
+      // rotationally. altitude is zero, so no inversion is necessary
+      pointCloud.push_back(cv::Point3d(avgLoc.x, -avgLoc.y, 0));
+    }
+  }
+  return pointCloud;
+}
+
 int PointSet::Num3DPoints() {
   return numMatches;
 }
