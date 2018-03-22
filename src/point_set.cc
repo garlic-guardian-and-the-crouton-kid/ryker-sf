@@ -172,8 +172,38 @@ std::vector<double> PointSet::GetSbaInitialParams(int cnp)
     }
   }
   
-  // Iterate over points to set initial estimates
+  if (pIndex != m * cnp)
+  {
+    std::cerr << "index error in GetSbaInitialParams. Expected: " 
+      << m * cnp << " Got: " << pIndex << std::endl;
+  }
 
+  // Iterate over points to set initial estimates
+  for (int i = 0; i < imageIndices.size(); i++)
+  {
+    for (auto const & match : points[i])
+    {
+      // Take the avgerage estimaged Geo location for each point
+      cv::Point2f firstLoc = metadataList[imageIndices[i].first].ImageToGeo(match.first);
+      cv::Point2f secondLoc = metadataList[imageIndices[i].second].ImageToGeo(match.second);
+      cv::Point2f avgLoc = (firstLoc + secondLoc) / 2;
+
+      // Store point in initial estimates array
+      // As above, we invert north/south to match the camera frame of reference
+      // rotationally. altitude is zero, so no inversion is necessary
+      p[pIndex] = avgLoc.x;
+      p[pIndex + 1] = -avgLoc.y;
+      p[pIndex + 2] = 0;
+
+      pIndex += pnp;
+    }
+  }
+
+  if (pIndex != m * cnp + n * pnp)
+  {
+    std::cerr << "Final index error in GetSbaInitialParams. Expected: "
+      << m * cnp + n * pnp << " Got: " << pIndex << std::endl;
+  }
 
   return p;
 }
