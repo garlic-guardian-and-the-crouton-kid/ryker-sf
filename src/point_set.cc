@@ -2,6 +2,7 @@
  * Copyright 2018 Justin Manley and Joseph Bolling.
  */
 #include "point_set.h"
+#include "sba_utils.h"
 
 #include <iostream>
 #include <memory>
@@ -107,6 +108,74 @@ SbaMeasurementInfo PointSet::GetSbaMeasurementInfo() {
     }
   }
   return SbaMeasurementInfo{measurements, mask};
+}
+
+// Returns an initial parameter estimate vector for use with SBA
+// if cnp = 11: constructs vector assuming a 5-DoF Camera projection matrix
+//    (f, aspect ratio, cx, cy, skewness)
+std::vector<double> PointSet::GetSbaInitialParams(int cnp)
+{
+  double altitude = 2000;  //assume aircraft is flying at 2000m
+  int m = metadataList.size();
+  int n = numMatches;
+  int pnp = 3;  //points are Euclidian in 3D space
+  // allocate initial vector with space for cnp parameters per camera and 
+  // pnp parameters per point
+  std::vector<double> p(m*cnp + n*pnp);
+  
+  int pIndex = 0;
+  if (cnp == 11)
+  {
+    // iterate over cameras to set parameters
+    for (auto & image : metadataList)
+    {
+      CameraParams params;
+      int h = image.ImageSize().height;
+      int w = image.ImageSize().width;
+
+      // camera instrinsics -
+      // f, u0, v0, ar, s
+      // To calculate f, get the length of the image horizontal in the world frame
+      cv::Point2f wEnd = image.ImageToGeo(cv::Point2f(0, w));
+      cv::Point2f wOrigin = image.ImageToGeo(cv::Point2f(0, 0));
+      double wWidth = cv::norm(wOrigin - wEnd);
+      params.f = w / wWidth * altitude;
+      params.u0 = image.ImageSize().width / 2.0;
+      params.v0 = image.ImageSize().height / 2.0;
+      params.ar = 1.0;
+      params.s = 0;
+
+      // Calculate Rotation
+      // Since the GeoTIFF images have already been homographically stitched, the image
+      // axes are aligned. For simplicity, we set the world coordinate system
+      // to have the same alignment. The initial rotation estimate for each camera is then
+      // the identity quaternion 1, 0, 0, 0
+      params.q0 = 1;
+      params.q1 = 0;
+      params.q2 = 0;
+      params.q3 = 0;
+
+      // Calculate camera translation
+      // The Geo coordinate frame is positive in North and East, while the image frame is 
+      // positive in South and East. To maintain the identity rotation above, we must invert
+      // the North/South and Up/Down axes of the Geo frame to produce the world frame.
+      cv::Point2f imCenter = cv::Point2f(params.u0, params.v0);
+      cv::Point2f camCenter = image.ImageToGeo(imCenter);
+      params.x = camCenter.x;
+      params.y =  - camCenter.y;
+      params.z =  - altitude;
+
+      // Reduce Quaternion representation to 3D & copy to p
+      quat2vec((double*)&params, cnp + 1, &p[pIndex], cnp);
+
+      pIndex += cnp;
+    }
+  }
+  
+  // Iterate over points to set initial estimates
+
+
+  return p;
 }
 
 }  // namespace ggck

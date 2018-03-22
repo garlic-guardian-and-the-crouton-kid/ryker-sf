@@ -13,19 +13,6 @@
 
 namespace ggck {
 
-struct camera_params {
-  double f;     // focal length of camera
-  double cx;    // x center of camera (image coordinates)
-  double cy;    // y center of camera (image coordinates)
-  double roll;  // camera roll
-  double pitch; // camera pitch
-  double yaw;   // camera camera yaw
-  double tx;    // camera x translation
-  double ty;    // camera y translation
-  double tz;    // camera z translation
-};
-
-
 void MkQuatFrmVec(double * q, double * v) {
   (q)[1] = (v)[0];
   (q)[2] = (v)[1];

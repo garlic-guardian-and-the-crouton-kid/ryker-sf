@@ -47,7 +47,10 @@ class PointSet {
   // Calculates and returns the measurement vector and mask for use with SBA
   SbaMeasurementInfo GetSbaMeasurementInfo();
 
- private:
+  // Returns an initial parameter estimate vector for use with SBA
+  std::vector<double> GetSbaInitialParams(int cnp);
+
+private:
   // Arrays of point correspondences. ptsA[i][j] refers to the ith match from
   // image correspondence j
   std::vector<PointMatches> points;

@@ -6,6 +6,25 @@
 #define INCLUDE_SBA_UTILS_H_
 
 namespace ggck {
+  
+// Struct with camera parameters for cnp = 11
+// This struct uses the quaternion description of rotation, and so has an
+// extra degree of freedom (q3). It is reduced to 11 DoF using the quat2vec
+// function
+struct CameraParams {
+  double f;   // focal length
+  double u0;  // center of the image in x
+  double v0;  // center of the image in y
+  double ar;  // aspect ratio between x and y focal lengths
+  double s;   // skewness factor for non-square pixels
+  double q0;  // quaternion scalar element
+  double q1;  // quaternion second element
+  double q2;  // quaternion third element
+  double q3;  // quaternion fourth element
+  double x;   // translation in x
+  double y;   // translation in y
+  double z;   // translation in z
+};
 
 /* convert a vector of camera parameters so that rotation is represented by
  * the vector part of the input quaternion. The function converts the
