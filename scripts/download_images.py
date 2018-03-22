@@ -1,3 +1,4 @@
+import argparse
 import math
 import os
 import urllib2
@@ -11,21 +12,31 @@ image. If there is an error downloading an image, the script will report the
 error and attempt to continue with the next image.
 '''
 def main():
-    if len(sys.argv) < 3:
-        print "Usage: download_images.py <image_urls_file> <image_download_dir>"
-        return 1
+    parser = argparse.ArgumentParser(
+        description = 'Download images from URLs specified in a file')
+    parser.add_argument('image_list_filename', type = str,
+        help = 'name of a file containing a list of URLs, one on each line')
+    parser.add_argument('image_download_dir', type = str,
+        help = 'path to the directory where images should be downloaded')
+    parser.add_argument('--start_from', type = int, default = 1,
+        metavar = 'line_num',
+        help = 'the 1-based line number of the first image to download')
 
-    # The path for a file containing a list of image URLs, one on each line.
-    image_list_filename = sys.argv[1]
-    # The path for a directory where the downloaded images will be placed.
-    image_download_dir = sys.argv[2]
+    args = parser.parse_args()
 
-    with open(image_list_filename, 'r') as image_list:
-        num_images = sum(1 for line in open(image_list_filename))
-        max_digits = int(math.log10(num_images)) + 1
+    with open(args.image_list_filename, 'r') as image_list:
+        num_images = sum(1 for line in open(args.image_list_filename))
+        max_digits = int(math.log10(num_images + 1)) + 1
         for i, image_url in enumerate(image_list):
+            line_num = i + 1
+
+            if line_num < args.start_from:
+                continue
+
+            # Add 1 because the index passed by enumerate() is 0-based, but the
+            # indices of images in the David Rumsey Map Collection are 1-based.
             image_filename = os.path.join(
-                image_download_dir, str(i).zfill(max_digits) + '.tif')
+                args.image_download_dir, str(line_num).zfill(max_digits) + '.tif')
             if os.path.exists(image_filename) and os.path.isfile(image_filename):
                 print 'Skipping ' + image_filename
                 continue
