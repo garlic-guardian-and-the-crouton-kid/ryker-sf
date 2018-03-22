@@ -27,7 +27,6 @@ struct MaskedImage {
 };
 
 typedef std::pair<ImageMetadata, ImageMetadata> ImagePair;
-typedef std::vector<ImagePair>::const_iterator ConstImagePairIterator;
 
 // An OverlappingImageSet is a polygon in geographic coordinates, along with a
 // set of images which depict that territory. Each image is represented by an
@@ -38,10 +37,8 @@ class OverlappingImageSet {
   OverlappingImageSet(const std::vector<ImageMetadata>& image_metadata,
                       const Polygon_2& geo_face_polygon);
 
-  // Convenience functions for iterating over all pairs of images in this set.
-  // This is useful for point matching, which takes images in pairs.
-  ConstImagePairIterator ImagePairsBegin() const;
-  ConstImagePairIterator ImagePairsEnd() const;
+  // All pairs of images in this set.
+  std::vector<ImagePair> ImagePairs() const;
 
   // Generate the mask for the image, and return the mask along with the image
   // and its metadata. Note that this method is expensive because it reads the

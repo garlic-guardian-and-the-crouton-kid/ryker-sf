@@ -11,55 +11,79 @@
 
 namespace ggck {
 
-typedef cv::Mat Mat;
+using cv::Mat;
+using cv::DMatch;
+using cv::DescriptorMatcher;
+using cv::AKAZE;
+using cv::Ptr;
+
+constexpr double match_ratio = 0.8;
+constexpr double ransac_threshold = 10.0;
 
 DensePointsAndMatches ComputePointMatches(const MaskedImage& im1,
                                           const MaskedImage& im2) {
-  cv::Ptr<cv::AKAZE> detector = cv::AKAZE::create();
-  cv::Ptr<cv::DescriptorMatcher> matcher =
-      cv::DescriptorMatcher::create("BruteForce-Hamming");
-  const double match_ratio = 0.8;
-  const double ransac_threshold = 10.0;
+  Ptr<AKAZE> detector = AKAZE::create();
+  Ptr<DescriptorMatcher> matcher =
+      DescriptorMatcher::create("BruteForce-Hamming");
 
-  Mat d1, d2;
-  std::vector<cv::KeyPoint> kp1, kp2;
-  Mat out_image;
-  std::vector<std::vector<cv::DMatch>> matches;
-  std::vector<cv::DMatch> pruned_matches;
-  std::vector<cv::DMatch> ransaced_matches;
-  std::vector<cv::Point2d> p1, p2;
+  // Keypoints and descriptors for both images.
+  Mat descriptors1, descriptors2;
+  std::vector<cv::KeyPoint> keypoints1, keypoints2;
+  detector->detectAndCompute(im1.image, im1.mask, keypoints1, descriptors1);
+  detector->detectAndCompute(im2.image, im2.mask, keypoints2, descriptors2);
+  // If the feature extractor is not able to find keypoints for one or both
+  // images, knn matching will still generate matches between the descriptor
+  // matrices, but the matches will be spurious, because one (or both)
+  // descriptor matrices will be uninitialized.
+  if (keypoints1.empty() || keypoints2.empty()) {
+    std::vector<DMatch> no_matches;
+    return DensePointsAndMatches{no_matches, keypoints1, keypoints2};
+  }
 
-  //  keypoints and descriptors for both images
-  detector->detectAndCompute(im1.image, im1.mask, kp1, d1);
-  detector->detectAndCompute(im2.image, im2.mask, kp2, d2);
-
-  //  coarse matches
-  matcher->knnMatch(d1, d2, matches, 2);
+  // Coarse matches
+  std::vector<std::vector<DMatch>> matches;
+  matcher->knnMatch(descriptors1, descriptors2, matches, 2);
 
   // Trim out matches that aren't significantly better than the next nearest
-  for (unsigned i = 0; i < matches.size(); i++) {
-    if (matches[i][0].distance < match_ratio * matches[i][1].distance) {
-      pruned_matches.push_back(matches[i][0]);
-      p1.push_back(kp1[matches[i][0].queryIdx].pt);
-      p2.push_back(kp2[matches[i][0].trainIdx].pt);
+  std::vector<DMatch> pruned_matches;
+  std::vector<cv::Point2d> matches_im1, matches_im2;
+  for (const std::vector<DMatch>& match : matches) {
+    // If there are fewer than k keypoints in either image, then match will have
+    // fewer than k elements. In extremely feature-poor images, there may not
+    // even be two keypoints to compare; we ignore such keypoints.
+    if (match.size() > 1 &&
+        match[0].distance < match_ratio * match[1].distance) {
+      pruned_matches.push_back(match[0]);
+
+      matches_im1.push_back(keypoints1[match[0].queryIdx].pt);
+      matches_im2.push_back(keypoints2[match[0].trainIdx].pt);
     }
   }
 
   // Use RANSAC to fit a homography and further trim matches
-  Mat mask;
-  Mat H = cv::findHomography(p1, p2, mask, cv::RANSAC, ransac_threshold);
+  // We only want to fit a homography if there is more than one pruned match,
+  // since findHomography throws an error if it is given empty point sets.
+  std::vector<DMatch> ransaced_matches;
+  if (!pruned_matches.empty()) {
+    Mat mask;
+    Mat H = cv::findHomography(matches_im1, matches_im2, mask, cv::RANSAC,
+                               ransac_threshold);
 
-  for (int i = 0; i < mask.rows; i++) {
-    if (mask.at<bool>(i)) {
-      ransaced_matches.push_back(pruned_matches[i]);
+    for (int i = 0; i < mask.rows; i++) {
+      if (mask.at<bool>(i)) {
+        ransaced_matches.push_back(pruned_matches[i]);
+      }
     }
   }
 
-  // cv::drawMatches(im1.image, kp1, im2.image, kp2, ransaced_matches,
-  // out_image);
-  // cv::drawKeypoints(im1, kp1, out_image);
+  Mat out_image;
+  cv::drawMatches(im1.image, keypoints1, im2.image, keypoints2,
+                  ransaced_matches, out_image);
+  cv::imshow("Point matches", out_image);
+  cv::waitKey(0);
+  // cv::drawKeypoints(im1, keypoints1, out_image);
 
-  return DensePointsAndMatches{ransaced_matches, kp1, kp2};
+  return DensePointsAndMatches{ransaced_matches, keypoints1, keypoints2};
 }
 
 }  // namespace ggck

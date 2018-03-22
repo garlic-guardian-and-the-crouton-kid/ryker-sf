@@ -30,7 +30,7 @@ CvPolygon CgalToCvPolygon(const ImageMetadata& image,
 // TODO(justinmanley): Replace this with an implementation which constructs
 // a vector of integer index pairs and delegates iteration to that vector in
 // order to save memory.
-std::vector<ImagePair> ImagePairs(
+std::vector<ImagePair> BuildImagePairs(
     const std::vector<ImageMetadata>& image_metadata) {
   std::vector<ImagePair> image_pairs;
   for (auto im1 = image_metadata.begin(); im1 != image_metadata.end(); im1++) {
@@ -48,14 +48,10 @@ OverlappingImageSet::OverlappingImageSet(
     const Polygon_2& geo_face_polygon)
     : image_metadata(image_metadata),
       geo_face_polygon(geo_face_polygon),
-      image_pairs(ImagePairs(image_metadata)) {}
+      image_pairs(BuildImagePairs(image_metadata)) {}
 
-ConstImagePairIterator OverlappingImageSet::ImagePairsBegin() const {
-  return image_pairs.begin();
-}
-
-ConstImagePairIterator OverlappingImageSet::ImagePairsEnd() const {
-  return image_pairs.end();
+std::vector<ImagePair> OverlappingImageSet::ImagePairs() const {
+  return image_pairs;
 }
 
 MaskedImage OverlappingImageSet::ComputeImageMask(
