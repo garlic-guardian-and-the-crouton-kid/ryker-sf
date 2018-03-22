@@ -14,11 +14,26 @@ images.
 ### Development
 The code which partitions the georectified images into overlapping sets
 uses [CGAL](https://www.cgal.org/), so you will need to install the dev
-libraries for CGAL on your machine before building.
+libraries for CGAL on your machine before building. On Ubuntu, you can do
+this using apt-get. You will also need to install and build [SBA][] and its
+dependencies, which you can do as follows:
+
+```
+curl -H "User-Agent: Mozilla/5.0" \
+    http://users.ics.forth.gr/~lourakis/sba/sba-1.6.tgz > sba-1.6.tgz
+tar -xvzf sba-1.6.tgz -C third_party
+cd third_party/sba-1.6
+cmake .
+make sba
+```
+
+It is ok if `cmake .` and `make sba` output warnings. Make sure to run
+`make sba` and not `make`, as the eucsbademo target is broken.
 
 To build and run the C++ code, run:
 
 ```
+export SBAROOT=$PWD/third_party/sba-1.6
 mkdir -p build
 cd build && cmake .. && make
 ./reconstruct_3d
@@ -73,3 +88,4 @@ See [this answer][gdalwarp image resize] on StackOverflow for more details.
 
 [example]: https://davidrumsey.georeferencer.com/maps/280343924889/
 [gdalwarp image resize]: https://gis.stackexchange.com/questions/111523/how-to-correctly-resize-raster-gis-images-to-a-given-px-width
+[SBA]: http://users.ics.forth.gr/~lourakis/sba/
