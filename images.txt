@@ -110,15 +110,15 @@ https://exports.georeferencer.com/409959669984-2015-03-02T15:11:44.749200Z.tif
 https://exports.georeferencer.com/640569944752-2017-02-20T14:25:19.132722Z.tif
 https://exports.georeferencer.com/863725871986-2017-02-20T14:25:19.132722Z.tif
 https://exports.georeferencer.com/932332640335-2017-02-20T14:25:19.132722Z.tif
-https://exports.georeferencer.com/54192427565-2017-02-20T14:25:19.132722Z.tif\
+https://exports.georeferencer.com/54192427565-2017-02-20T14:25:19.132722Z.tif
 https://exports.georeferencer.com/717318158872-2016-06-10T14:02:09.997430Z.tif
 https://exports.georeferencer.com/998734669904-2017-02-20T14:25:19.132722Z.tif
-https://exports.georeferencer.com/98478591674-2017-02-20T14:25:19.132722Z.tif\
+https://exports.georeferencer.com/98478591674-2017-02-20T14:25:19.132722Z.tif
 https://exports.georeferencer.com/846350538803-2017-08-26T15:20:14.515840Z.tif
 https://exports.georeferencer.com/606540954314-2017-06-02T14:31:55.845661Z.tif
 https://exports.georeferencer.com/740684632235-2017-08-20T00:47:53.629300Z.tif
-https://exports.georeferencer.com/55408457777-2017-02-20T14:25:19.132722Z.tif\
-https://exports.georeferencer.com/62422884216-2017-02-20T14:25:19.132722Z.tif\
+https://exports.georeferencer.com/55408457777-2017-02-20T14:25:19.132722Z.tif
+https://exports.georeferencer.com/62422884216-2017-02-20T14:25:19.132722Z.tif
 https://exports.georeferencer.com/929159048485-2017-05-05T10:16:36.131665Z.tif
 https://exports.georeferencer.com/180441836857-2017-02-20T14:25:19.132722Z.tif
 https://exports.georeferencer.com/323379481095-2017-08-25T23:35:10.256881Z.tif
@@ -126,7 +126,7 @@ https://exports.georeferencer.com/757091112348-2015-03-02T15:23:59.746060Z.tif
 https://exports.georeferencer.com/443266984494-2017-06-16T16:43:25.543653Z.tif
 https://exports.georeferencer.com/840799319718-2017-08-23T19:06:21.221225Z.tif
 https://exports.georeferencer.com/945249196074-2017-02-20T14:25:19.132722Z.tif
-https://exports.georeferencer.com/23900538643-2017-02-20T14:25:19.132722Z.tif\
+https://exports.georeferencer.com/23900538643-2017-02-20T14:25:19.132722Z.tif
 https://exports.georeferencer.com/442545308566-2017-02-20T14:25:19.132722Z.tif
 https://exports.georeferencer.com/543752437690-2017-02-20T14:25:19.132722Z.tif
 https://exports.georeferencer.com/245380659072-2015-02-16T19:19:25.465810Z.tif
@@ -137,7 +137,7 @@ https://exports.georeferencer.com/275603392612-2017-08-25T19:23:37.343439Z.tif
 https://exports.georeferencer.com/181974199593-2015-02-12T13:42:38.061710Z.tif
 https://exports.georeferencer.com/970415064813-2017-02-20T14:25:19.132722Z.tif
 https://exports.georeferencer.com/108928509298-2017-02-20T14:25:19.132722Z.tif
-https://exports.georeferencer.com/92452873803-2017-02-20T14:25:19.132722Z.tif\
+https://exports.georeferencer.com/92452873803-2017-02-20T14:25:19.132722Z.tif
 https://exports.georeferencer.com/893068763336-2017-08-20T02:04:35.763930Z.tif
 https://exports.georeferencer.com/387809226833-2017-03-13T09:32:44.964264Z.tif
 
