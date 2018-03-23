@@ -19,6 +19,7 @@ using cv::Ptr;
 
 constexpr double match_ratio = 0.8;
 constexpr double ransac_threshold = 10.0;
+constexpr int min_required_matches = 8;
 
 DensePointsAndMatches ComputePointMatches(const MaskedImage& im1,
                                           const MaskedImage& im2) {
@@ -76,12 +77,19 @@ DensePointsAndMatches ComputePointMatches(const MaskedImage& im1,
     }
   }
 
+  // Draw image
+  /*
   Mat out_image;
   cv::drawMatches(im1.image, keypoints1, im2.image, keypoints2,
                   ransaced_matches, out_image);
   cv::imshow("Point matches", out_image);
-  cv::waitKey(0);
-  // cv::drawKeypoints(im1, keypoints1, out_image);
+  cv::waitKey(0);*/
+
+  // If less than min_required_matches, throw out the matches before returning
+  // since the histogram was likely overfitted.
+  if (ransaced_matches.size() < min_required_matches) {
+    ransaced_matches.clear();
+  }
 
   return DensePointsAndMatches{ransaced_matches, keypoints1, keypoints2};
 }

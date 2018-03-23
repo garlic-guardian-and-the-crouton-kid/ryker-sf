@@ -84,7 +84,9 @@ int main(int argc, char* argv[]) {
       ggck::DensePointsAndMatches matches =
           ComputePointMatches(overlap.ComputeImageMask(image_pair.first),
                               overlap.ComputeImageMask(image_pair.second));
-      points->Add(matches, image_pair);
+      if (matches.matches.size() != 0) {
+        points->Add(matches, image_pair);
+      }
       current_image_pair++;
     }
   }

@@ -506,7 +506,7 @@ std::vector<cv::Point3d> RunSba(PointSet *pointSet) {
   int numPoints3D = pointSet->Num3DPoints();
   int numFrames = pointSet->NumFrames();
   int verbose = 0;
-  int maxIter = 150;
+  int maxIter = 300;
   double opts[SBA_OPTSSZ], info[SBA_INFOSZ];
   /* I: minim. options [\mu, \epsilon1, \epsilon2, \epsilon3, \epsilon].
   * Respectively the scale factor for initial \mu,
