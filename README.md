@@ -1,6 +1,22 @@
 3D reconstruction of 1938 San Francisco
 =======================================
 
+This repository contains a pipeline for reconstructing 3D topography from a set
+of partially-overlapping images taken by uncalibrated cameras. We demonstrate
+this system on a set of aerial images of San Francisco taken by Harrison Ryker
+in 1938, preserved by the San Francisco Public Library, and digitized by the
+David Rumsey Map Center.
+
+![map showing the error in our reconstruction][error_map]
+
+The map above shows the [RMSE][] of our reconstruction, compared against a [2013
+digital elevation map][] (DEM) with 1/3 arc-second resolution (approximately 10
+meters). Our point cloud reconstruction is binned at the resolution of the DEM.
+More information about these DEMs is available [here][USGS DEMs].
+
+Total RMSE for our reconstruction, compared against the 2013 DEM is 65.42
+meters.
+
 ### Running
 
 To run the pipeline, build the code (see below for instructions), and the run:
@@ -89,7 +105,18 @@ gdalwarp -of GTiff -ts 512 0 input.tif output.tif
 
 See [this answer][gdalwarp image resize] on StackOverflow for more details.
 
+### Evaluation
+
+```
+curl https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/13/ArcGrid/n38w123.zip > sf_dem.zip
+unzip sf_dem.zip -d sf_dem
+```
+
 
 [example]: https://davidrumsey.georeferencer.com/maps/280343924889/
 [gdalwarp image resize]: https://gis.stackexchange.com/questions/111523/how-to-correctly-resize-raster-gis-images-to-a-given-px-width
 [SBA]: http://users.ics.forth.gr/~lourakis/sba/
+[error_map]: https://github.com/garlic-guardian-and-the-crouton-kid/ryker-sf/blob/master/results/error_map.png
+[RMSE]: https://en.wikipedia.org/wiki/Root-mean-square_deviation
+[2013 digital elevation map]: https://www.sciencebase.gov/catalog/item/581d224ee4b08da350d547ca
+[USGS DEMs]: https://catalog.data.gov/dataset/usgs-national-elevation-dataset-ned-1-meter-downloadable-data-collection-from-the-national-map-
