@@ -17,6 +17,25 @@ More information about these DEMs is available [here][USGS DEMs].
 Total RMSE for our reconstruction, compared against the 2013 DEM is 65.42
 meters.
 
+Some renderings of our reconstruction:
+
+![mesh_overhead.png][]
+![mesh_tilted.png][]
+![mesh_tilted_shallow.png][]
+![mesh_tilted_upside_down.png][]
+
+These renderings are more complete than they should be; our reconstruction is
+only a partial reconstruction of San Francisco, with many gaps where there are
+no overlaps between images in the dataset. The grid pattern of ridges and
+valleys in the rendered topography is an artifact of this; a more faithful
+rendering would delete those faces to leave holes where there is missing data.
+
+Note also that a patch of the western shore of the city is missing from the
+rendering; this is likely captured in images 154 - 164, which are missing from
+our dataset.
+
+See [Rendering](#rendering) below for the details of how this rendering was created.
+
 ### Running
 
 To run the pipeline, build the code (see below for instructions), and the run:
@@ -112,6 +131,25 @@ curl https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/13/ArcGrid/n38w12
 unzip sf_dem.zip -d sf_dem
 ```
 
+### Rendering
+
+The renderings of the reconstructed ground surface of San Francisco were created
+in [Meshlab][] and [Blender][]. To reproduce:
+  1. Import the reconstructed points into Meshlab as a .asc file (plain list of
+     x,y,z points)
+  2. Generate normals for the full set of ~80,000 points. Filters > Normals,
+     Curvature, and Orientation > Compute normals for point sets. Use the
+     default setting of 10 neighbors.
+  3. Smooth the normals: Filters > Point Set > Smooth normals on a point sets.
+     Again, the default settings of 10 neighbors are fine.
+  4. Reconstruct the meshed surface. Remeshing, Simplification, and
+     Reconstrution > Surface Reconstruction: Poisson (again, use the default
+     settings).
+  5. Export mesh to STL.
+  6. Open the STL file in Blender and experiment with different camera angles
+     to find angles which convey a qualitative sense of the topography of the
+     reconstruction. Take screenshots.
+  7. Done!
 
 [example]: https://davidrumsey.georeferencer.com/maps/280343924889/
 [gdalwarp image resize]: https://gis.stackexchange.com/questions/111523/how-to-correctly-resize-raster-gis-images-to-a-given-px-width
@@ -120,3 +158,11 @@ unzip sf_dem.zip -d sf_dem
 [RMSE]: https://en.wikipedia.org/wiki/Root-mean-square_deviation
 [2013 digital elevation map]: https://www.sciencebase.gov/catalog/item/581d224ee4b08da350d547ca
 [USGS DEMs]: https://catalog.data.gov/dataset/usgs-national-elevation-dataset-ned-1-meter-downloadable-data-collection-from-the-national-map-
+[Blender]: https://www.blender.org/
+[Meshlab]: http://www.meshlab.net/
+
+[mesh_overhead.png]: https://github.com/garlic-guardian-and-the-crouton-kid/ryker-sf/blob/master/results/mesh_overhead.png
+[mesh_tilted.png]: https://github.com/garlic-guardian-and-the-crouton-kid/ryker-sf/blob/master/results/mesh_tilted.png
+[mesh_tilted_shallow.png]: https://github.com/garlic-guardian-and-the-crouton-kid/ryker-sf/blob/master/results/mesh_tilted_shallow.png
+[mesh_tilted_upside_down.png]: https://github.com/garlic-guardian-and-the-crouton-kid/ryker-sf/blob/master/results/mesh_tilted_upside_down.png
+
