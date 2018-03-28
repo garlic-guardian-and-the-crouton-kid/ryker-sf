@@ -1,9 +1,19 @@
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import sys
 
 def main():
+    parser = argparse.ArgumentParser(
+        description = 'Plot the reconstructed 3D points.')
+    parser.add_argument('initial_points', type = str,
+        help = 'path to a file containing the points used to initialize bundle adjustment.')
+    parser.add_argument('reconstructed_points', type = str,
+        help = 'path to a file containing the 3D points reconstructed by bundle adjustment.')
+
+    args = parser.parse_args()
+
     # Min and max values for trimmed pointcloud
     x_min = -13627500
     x_max = -13627000
@@ -11,8 +21,8 @@ def main():
     y_max = -4544000
 
     # Plot full pointclouds
-    adj_pc = np.genfromtxt('adjusted_points.csv',delimiter=',')
-    init_pc = np.genfromtxt('initial_points.csv',delimiter=',')
+    adj_pc = np.genfromtxt(args.reconstructed_points, delimiter = ',')
+    init_pc = np.genfromtxt(args.initial_points, delimiter = ',')
     print(adj_pc.shape)
         
     fig = plt.figure(1)
@@ -45,8 +55,7 @@ def main():
     ax2.set_zlabel('Z')
     
     plt.show()
-    
-    
         
+
 if __name__ == '__main__':
     sys.exit(main())
