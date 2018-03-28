@@ -38,10 +38,10 @@ See [Rendering](#rendering) below for the details of how this rendering was crea
 
 ### Running
 
-To run the pipeline, build the code (see below for instructions), and the run:
+To run the pipeline, build the code (see below for instructions), and then run:
 
 ```
-find $PWD/$IMAGES -type f | xargs build/reconstruct_3d
+find $PWD/$IMAGES -type f | xargs reconstruct_3d
 ```
 
 where $IMAGES is the (local) path to the directory where you have downloaded the
@@ -74,7 +74,7 @@ To build and run the C++ code, run:
 export SBAROOT=$PWD/third_party/sba-1.6
 mkdir -p build
 cd build && cmake .. && make
-./reconstruct_3d
+find /path/to/src/images -type f | xargs ./reconstruct_3d
 ```
 
 Before submitting your code, you should run the Google C++ linter to ensure
@@ -126,10 +126,56 @@ See [this answer][gdalwarp image resize] on StackOverflow for more details.
 
 ### Evaluation
 
+We evaluate the quality of our reconstruction against a 2013 DEM of San
+Francisco. To run this evaluation yourself, you will first need to download the 
+DEM yourself from the USGS website.
+
 ```
 curl https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/13/ArcGrid/n38w123.zip > sf_dem.zip
 unzip sf_dem.zip -d sf_dem
 ```
+
+This DEM covers the entire San Francisco Bay Area, so we crop it using GDAL to
+cover only San Francisco:
+
+```
+gdalwarp sf_dem/grdn38w123_13/w001001x.adf -te \
+    -122.533879065 37.6915998476 \
+    -122.343652693 37.8195619919 \
+    SanFranciscoCropped.adf
+```
+
+You can then run evalution with:
+
+```
+SRC_IMAGE_PROJECTION=$(gdalinfo /path/to/a/src/image.tif -json -proj4 | jq -r '.coordinateSystem.proj4')
+python scripts/evaluate_reconstruction.py SanFranciscoCropped.adf \
+    /path/to/adjusted_points.csv $SRC_IMAGE_PROJECTION
+```
+
+Note that this assumes you have already run the reconstruction pipeline;
+adjusted_points.csv is one of the files that the reconstruction pipeline
+outputs. Each line in this file contains the x,y,z coordinates of a
+reconstructed point (x and y coordinates are in the coordinate reference
+system of the source images).
+
+Note that if you are running this script in a virtual environment (e.g.
+virtualenv), you may have trouble installing GDAL. The following should work:
+
+```
+pip download GDAL
+tar -zxvf GDAL-X.Y.Z.tar.gz
+cd GDAL-1.11.2
+python setup.py build_ext --include-dirs=/usr/include/gdal/
+python setup.py build
+python setup.py install
+```
+
+where X.Y.Z should match the version of GDAL you already have installed on
+your system (check `gdalinfo --version`). See
+[Python GDAL package missing header file][], [Installing GDAL in a Python
+virtual environment][], [Installing GDAL into a python virtualenv][].
+
 
 ### Rendering
 
@@ -160,6 +206,9 @@ in [Meshlab][] and [Blender][]. To reproduce:
 [USGS DEMs]: https://catalog.data.gov/dataset/usgs-national-elevation-dataset-ned-1-meter-downloadable-data-collection-from-the-national-map-
 [Blender]: https://www.blender.org/
 [Meshlab]: http://www.meshlab.net/
+[Python GDAL package missing header file]: https://gis.stackexchange.com/questions/28966/python-gdal-package-missing-header-file-when-installing-via-pip
+[Installing GDAL in a Python virtual environment]: https://gist.github.com/cspanring/5680334
+[Installing GDAL into a python virtualenv]: https://gis.stackexchange.com/questions/6360/installing-geos-proj-gdal-ogr-into-a-python-virtualenv-on-mac-os-x
 
 [mesh_overhead.png]: https://github.com/garlic-guardian-and-the-crouton-kid/ryker-sf/blob/master/results/mesh_overhead.png
 [mesh_tilted.png]: https://github.com/garlic-guardian-and-the-crouton-kid/ryker-sf/blob/master/results/mesh_tilted.png

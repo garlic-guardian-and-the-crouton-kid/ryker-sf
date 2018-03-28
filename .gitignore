@@ -3,3 +3,9 @@ debug
 
 images
 third_party
+
+scripts/lib
+scripts/include
+scripts/bin
+scripts/local
+scripts/pip-selfcheck.json
