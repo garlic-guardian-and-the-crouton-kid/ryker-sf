@@ -173,6 +173,73 @@ def get_corresponding_ground_truth_points(estimates, ground_truth_dataset, groun
 
     return indices
 
+    # Reconstruction using structure-from-motion (e.g. bundle adjustment) is
+    # only up to an affine transformation, so we fit an affine transformation
+    # to align the estimates with the ground truth before evaluating the
+    # estimates. In our pipeline, bundle adjustment does not seem to affect
+    # the x and y coordinates, so we only fit an affine transformation on the
+    # elevations.
+
+'''
+GET_ESTIMATE_TO_GROUND_TRUTH_AFFINE_MAP Compute an affine map which maps the
+estimated points onto the ground truth. Reconstruction using
+structure-from-motion (e.g. bundle adjustment) is only up to an affine
+transformation, so we fit an affine transformation to align the estimates with
+the ground truth before evaluating the estimates.
+Arguments:
+    estimated_elevations - A (P, 3) ndarray containing the x,y,z coordinates of
+        each estimated point.
+
+    ground_truth_elevations - An (M, N) ndarray containing the ground truth
+        elevations.
+
+    ground_truth_dataset - A GDALDataset representing the ground truth
+
+    ground_truth_indices - A tuple containing two (P,)-shaped ndarrays with the
+        indices (x and y, respectively), of the bins in the ground truth DEM
+        corresponding to each estimated point.
+
+Returns:
+    A tuple of (A, b) such that Ae + b = g, where e = (x, y, z) is an estimated
+    point, and g = (x, y, z) is a ground truth point.
+
+    scaling_matrix - A (3,3) ndarray.
+
+    translation_vector -  A (3, 1) ndarray.
+'''
+def get_estimate_to_ground_truth_affine_map(
+        estimates, ground_truth_elevations, ground_truth_dataset, ground_truth_indices):
+    ground_truth_geo_transform = ground_truth_dataset.GetGeoTransform()
+    estimates_measurements = np.zeros((
+        3 * estimates.shape[0], 4 * estimates.shape[1]))
+    ground_truth_measurements = np.empty(3 * estimates.shape[0])
+
+    homogeneous_estimates = np.hstack((estimates, np.ones((estimates.shape[0], 1))))
+
+    # The equation to be solved by least-squares has the form:
+    #     [ x y z 1 0 0 0 0 0 0 0 0 ]   [ u ]
+    #     [ 0 0 0 0 x y z 1 0 0 0 0 ] = [ v ]
+    #     [ 0 0 0 0 0 0 0 0 x y z 1 ]   [ w ]
+    # for each point, where (x, y, z) is an estimated point, and
+    # (u, v, w) is the corresponding ground truth point.
+    estimates_measurements[0::3, 0:4] = homogeneous_estimates
+    estimates_measurements[1::3, 4:8] = homogeneous_estimates
+    estimates_measurements[2::3, 8:12] = homogeneous_estimates
+
+    ground_truth_measurements[0::3] = geo_transform_x(ground_truth_indices[0], ground_truth_geo_transform)
+    ground_truth_measurements[1::3] = geo_transform_y(ground_truth_indices[1], ground_truth_geo_transform)
+    ground_truth_measurements[2::3] = ground_truth_elevations[ground_truth_indices].flatten()
+
+    affine_map_parameters, _, _, _ = np.linalg.lstsq(
+        estimates_measurements,
+        ground_truth_measurements,
+        rcond = None)
+
+    homogeneous_affine_map = affine_map_parameters.reshape(3, 4)
+
+    return homogeneous_affine_map[0:3, 0:3], homogeneous_affine_map[:,3]
+
+
 '''
 COMPUTE_RMSE Compute root mean square error (RMSE) between elevation estimates
 and ground truth.
@@ -243,31 +310,28 @@ def main():
     assert(ground_truth_indices[0].shape == (estimates.shape[0],))
     assert(ground_truth_indices[1].shape == (estimates.shape[0],))
 
+    print 'Ground truth'
+    show_RMSE(
+        ground_truth_elevations[ground_truth_indices],
+        ground_truth_elevations, ground_truth_indices)
+
     print 'Flat estimated elevations (null hypothesis)'
     flat_estimated_elevations = np.full_like(
         estimates[:,2], np.average(ground_truth_elevations))
     show_RMSE(
         flat_estimated_elevations, ground_truth_elevations, ground_truth_indices)
 
-    # Reconstruction using structure-from-motion (e.g. bundle adjustment) is
-    # only up to an affine transformation, so we fit an affine transformation
-    # to align the estimates with the ground truth before evaluating the
-    # estimates. In our pipeline, bundle adjustment does not seem to affect
-    # the x and y coordinates, so we only fit an affine transformation on the
-    # elevations.
-    scaling_factor, _, _, _ = np.linalg.lstsq(
-        np.stack((estimates[:,2], np.full_like(estimates[:,2], 1))).T,
-        ground_truth_elevations[ground_truth_indices],
-        rcond = None)
-    scaled_estimated_elevations = scaling_factor[0] * estimates[:,2] + scaling_factor[1]
-
     print 'Unscaled estimated elevations'
     show_RMSE(
             estimates[:,2], ground_truth_elevations, ground_truth_indices)
 
-    print 'Scaled estimated elevations'
+    scaling_matrix, translation_vector = get_estimate_to_ground_truth_affine_map(
+        estimates, ground_truth_elevations, ground_truth_dataset, ground_truth_indices)
+    affine_estimated_elevations = scaling_matrix.dot(estimates.T).T + translation_vector
+
+    print 'Full affine-fit estimated elevations'
     show_RMSE(
-        scaled_estimated_elevations, ground_truth_elevations, ground_truth_indices)
+        affine_estimated_elevations[:,2], ground_truth_elevations, ground_truth_indices)
 
     print 'Ground truth variance: ', np.var(ground_truth_elevations)
 

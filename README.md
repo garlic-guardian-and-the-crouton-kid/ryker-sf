@@ -43,12 +43,12 @@ Here's how our reconstruction stacks up against the ground truth:
 | Ground truth elevation          | 0                  | 2488.34
 | Unscaled (raw) estimates        | 65.43              | 0.00011
 | Flat estimate (null hypothesis) | 42.73              | 0
-| Aligned estimates               | 38.71              | 0.55
+| Affine-aligned estimates        | 31.99              | 475.488
 
 The RMSE for the ground truth elevation is 0 by definition. The unscaled (raw)
 estimates are the raw values output from the reconstruction pipeline. These raw
 values are fit to the ground truth elevations using an affine transformation to
-obtain the "aligned estimates." The "flat estimate" represents the null
+obtain the "affine-aligned estimates." The "flat estimate" represents the null
 hypothesis for reconstruction -- a flat horizontal plane located at the average
 elevation of the ground truth dataset.
 
