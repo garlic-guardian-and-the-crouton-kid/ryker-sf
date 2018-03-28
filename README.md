@@ -3,9 +3,9 @@
 
 This repository contains a pipeline for reconstructing 3D topography from a set
 of partially-overlapping images taken by uncalibrated cameras. We demonstrate
-this system on a set of aerial images of San Francisco taken by Harrison Ryker
-in 1938, preserved by the San Francisco Public Library, and digitized by the
-David Rumsey Map Center.
+this system on [a set of aerial images of San Francisco taken by Harrison Ryker
+in 1938][aerial photographs], preserved by the San Francisco Public Library, and
+digitized by the [David Rumsey Map Center][].
 
 ![map showing the error in our reconstruction][error_map]
 
@@ -225,6 +225,8 @@ in [Meshlab][] and [Blender][]. To reproduce:
      reconstruction. Take screenshots.
   7. Done!
 
+[aerial photographs]: https://www.davidrumsey.com/luna/servlet/detail/RUMSEY~8~1~217219~5504219:Composite--1-164-San-Francisco-Aeri?sort=Pub_List_No_InitialSort%2CPub_Date%2CPub_List_No%2CSeries_No&qvq=q:ryker;sort:Pub_List_No_InitialSort%2CPub_Date%2CPub_List_No%2CSeries_No;lc:RUMSEY~8~1&mi=0&trs=166
+[David Rumsey Map Center]: https://www.davidrumsey.com/
 [example]: https://davidrumsey.georeferencer.com/maps/280343924889/
 [gdalwarp image resize]: https://gis.stackexchange.com/questions/111523/how-to-correctly-resize-raster-gis-images-to-a-given-px-width
 [SBA]: http://users.ics.forth.gr/~lourakis/sba/
