@@ -36,6 +36,13 @@ else()
   
   add_executable(reconstruct_3d ${SOURCES})
   target_include_directories(reconstruct_3d PRIVATE include)
-	target_link_libraries(reconstruct_3d ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES} ${OpenCV_LIBS} ${GDAL_LIBRARY} ${SBA_LIB} ${LAPACK_LIBRARIES})
+	target_link_libraries(
+		reconstruct_3d
+			${CGAL_LIBRARIES}
+			${CGAL_3RD_PARTY_LIBRARIES}
+			${OpenCV_LIBS}
+			${GDAL_LIBRARY}
+			${SBA_LIB}
+			${LAPACK_LIBRARIES})
 endif()
 
