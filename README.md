@@ -36,6 +36,34 @@ our dataset.
 
 See [Rendering](#rendering) below for the details of how this rendering was created.
 
+Here's how our reconstruction stacks up against the ground truth:
+
+| Dataset                         |  [RMSE][] (meters) | Variance
+|---------------------------------|--------------------|---------
+| Ground truth elevation          | 0                  | 2488.34
+| Unscaled (raw) estimates        | 65.43              | 0.00011
+| Flat estimate (null hypothesis) | 42.73              | 0
+| Aligned estimates               | 38.71              | 0.55
+
+The RMSE for the ground truth elevation is 0 by definition. The unscaled (raw)
+estimates are the raw values output from the reconstruction pipeline. These raw
+values are fit to the ground truth elevations using an affine transformation to
+obtain the "aligned estimates." The "flat estimate" represents the null
+hypothesis for reconstruction -- a flat horizontal plane located at the average
+elevation of the ground truth dataset.
+
+The table above shows that the aligned estimates are substantially better than
+the raw estimates (as is to be expected, since structure-from-motion methods
+leave an affine ambiguity in the 3D reconstruction). The table also shows that
+our aligned estimates perform only marginally better than the null hypothesis.
+The variance calculations reveal that the reconstructed topography is too flat.
+
+Further work should investigate why the reconstruction is so flat. The
+elevations are initialized to the same height at the beginning of bundle
+adjustment, so it is possible that bundle adjustment is simply not running for
+enough iterations. Further tuning of bundle adjustment could yield gains in
+accuracy and articulation in the reconstructed surface.
+
 ### Running
 
 To run the pipeline, build the code (see below for instructions), and then run:
