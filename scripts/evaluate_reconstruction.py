@@ -199,14 +199,18 @@ def show_RMSE(estimated_elevations, ground_truth_elevations, ground_truth_indice
     binned_rmse[ground_truth_indices] = absolute_elevation_difference
     binned_rmse = np.sqrt(binned_rmse ** 2)
     plt.imshow(binned_rmse)
-    plt.colorbar()
+    plt.title('RMSE of estimated elevation with respect to ground truth')
+    colorbar = plt.colorbar()
+    colorbar.set_label('RMSE (meters)', rotation = 270, labelpad = 20)
+    plt.axes().get_xaxis().set_visible(False)
+    plt.axes().get_yaxis().set_visible(False)
     plt.show()
 
     # Compute the total RMSE over the entire map.
     total_rmse = np.sqrt(np.sum(absolute_elevation_difference ** 2) / estimated_elevations.shape[0])
-    print 'Total RMSE: ', total_rmse
+    print '    Total RMSE: ', total_rmse
 
-    print 'Esimates variance: ', np.var(estimated_elevations)
+    print '    Estimates variance: ', np.var(estimated_elevations)
 
 def main():
     parser = argparse.ArgumentParser(
