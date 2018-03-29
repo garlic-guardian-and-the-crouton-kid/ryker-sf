@@ -332,8 +332,7 @@ def main():
     print 'Full affine-fit estimated elevations'
     show_RMSE(
         affine_estimated_elevations[:,2], ground_truth_elevations, ground_truth_indices)
-
-    print 'Ground truth variance: ', np.var(ground_truth_elevations)
+    np.savetxt('affine_fit_estimated_points.csv', affine_estimated_elevations, fmt = '%.8f', delimiter = ',')
 
 
 if __name__ == '__main__':

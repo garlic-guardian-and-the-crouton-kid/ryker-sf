@@ -14,7 +14,7 @@ digital elevation map][] (DEM) with 1/3 arc-second resolution (approximately 10
 meters). Our point cloud reconstruction is binned at the resolution of the DEM.
 More information about these DEMs is available [here][USGS DEMs].
 
-Total RMSE for our reconstruction, compared against the 2013 DEM is 65.42
+Total RMSE for our reconstruction, compared against the 2013 DEM is 31.99
 meters.
 
 Some renderings of our reconstruction:
@@ -40,7 +40,7 @@ Here's how our reconstruction stacks up against the ground truth:
 
 | Dataset                         |  [RMSE][] (meters) | Variance
 |---------------------------------|--------------------|---------
-| Ground truth elevation          | 0                  | 2488.34
+| Ground truth elevation          | 0                  | 1499.25
 | Unscaled (raw) estimates        | 65.43              | 0.00011
 | Flat estimate (null hypothesis) | 42.73              | 0
 | Affine-aligned estimates        | 31.99              | 475.488
