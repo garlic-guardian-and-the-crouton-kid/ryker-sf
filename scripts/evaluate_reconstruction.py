@@ -185,7 +185,9 @@ GET_ESTIMATE_TO_GROUND_TRUTH_AFFINE_MAP Compute an affine map which maps the
 estimated points onto the ground truth. Reconstruction using
 structure-from-motion (e.g. bundle adjustment) is only up to an affine
 transformation, so we fit an affine transformation to align the estimates with
-the ground truth before evaluating the estimates.
+the ground truth before evaluating the estimates. We only fit an affine map for
+the elevations, since we assume that the x and y coordinates are identical
+between the ground truth and the reconstruction.
 Arguments:
     estimated_elevations - A (P, 3) ndarray containing the x,y,z coordinates of
         each estimated point.
@@ -210,34 +212,74 @@ Returns:
 def get_estimate_to_ground_truth_affine_map(
         estimates, ground_truth_elevations, ground_truth_dataset, ground_truth_indices):
     ground_truth_geo_transform = ground_truth_dataset.GetGeoTransform()
-    estimates_measurements = np.zeros((
-        3 * estimates.shape[0], 4 * estimates.shape[1]))
-    ground_truth_measurements = np.empty(3 * estimates.shape[0])
-
-    homogeneous_estimates = np.hstack((estimates, np.ones((estimates.shape[0], 1))))
 
     # The equation to be solved by least-squares has the form:
-    #     [ x y z 1 0 0 0 0 0 0 0 0 ]   [ u ]
-    #     [ 0 0 0 0 x y z 1 0 0 0 0 ] = [ v ]
-    #     [ 0 0 0 0 0 0 0 0 x y z 1 ]   [ w ]
+    #     [ x y z 1 ]   [ w ]
     # for each point, where (x, y, z) is an estimated point, and
     # (u, v, w) is the corresponding ground truth point.
-    estimates_measurements[0::3, 0:4] = homogeneous_estimates
-    estimates_measurements[1::3, 4:8] = homogeneous_estimates
-    estimates_measurements[2::3, 8:12] = homogeneous_estimates
+    estimates_measurements = np.hstack((estimates, np.ones((estimates.shape[0], 1))))
 
-    ground_truth_measurements[0::3] = geo_transform_x(ground_truth_indices[0], ground_truth_geo_transform)
-    ground_truth_measurements[1::3] = geo_transform_y(ground_truth_indices[1], ground_truth_geo_transform)
-    ground_truth_measurements[2::3] = ground_truth_elevations[ground_truth_indices].flatten()
+    ground_truth_measurements = ground_truth_elevations[ground_truth_indices].flatten()
 
     affine_map_parameters, _, _, _ = np.linalg.lstsq(
         estimates_measurements,
         ground_truth_measurements,
         rcond = None)
 
-    homogeneous_affine_map = affine_map_parameters.reshape(3, 4)
+    return affine_map_parameters[0:3], affine_map_parameters[3]
 
-    return homogeneous_affine_map[0:3, 0:3], homogeneous_affine_map[:,3]
+'''
+EXPORT_POINTS_FOR_RENDERING Write estimated and ground truth points to csv files
+suitable for use in Meshlab.
+Arguments:
+    estimates - A (P, 3) ndarray containing the x,y,z coordinates of each
+        estimated point.
+
+    ground_truth_elevations - An (M, N) ndarray containing the ground truth
+        elevations.
+        
+    ground_truth_dataset - A GDALDataset representing the ground truth
+
+    ground_truth_indices - A tuple containing two (P,)-shaped ndarrays with the
+        indices (x and y, respectively), of the bins in the ground truth DEM
+        corresponding to each estimated point.
+
+Returns:
+    None
+'''
+def export_points_for_rendering(
+        estimates, ground_truth_elevations,
+        ground_truth_dataset, ground_truth_indices):
+    # Ball pivoting surface reconstruction in Meshlab only works when the
+    # range of data on the x, y, and z axes are all similar.
+    # The x and y coordinates in the ground truth data set are in the same
+    # units, while the z coordinates are in different units (meters).
+    # Scaling the z coordinates to match the range of the x coordinates is
+    # a hack to get ball-pivoting surface reconstruction to work in Meshlab.
+    estimates_x_range = np.max(estimates[:,0]) - np.min(estimates[:,0])
+    ground_truth_elevations_range = (
+        np.max(ground_truth_elevations) - np.min(ground_truth_elevations))
+    scaled_ground_truth_elevations = ground_truth_elevations * (
+        estimates_x_range / (5 * ground_truth_elevations_range))
+
+    ground_truth_matches = np.hstack((
+        estimates[:,0:2],
+        scaled_ground_truth_elevations[ground_truth_indices].reshape(
+            len(ground_truth_indices[0]), 1)))
+    np.savetxt("selected_ground_truth_points.asc", ground_truth_matches,
+        delimiter = ',')
+
+    # Align the estimates to the ground truth data with an affine
+    # transformation.
+    scaling_matrix, translation_vector = get_estimate_to_ground_truth_affine_map(
+        estimates, scaled_ground_truth_elevations,
+        ground_truth_dataset, ground_truth_indices)
+    affine_estimated_elevations = np.hstack((
+        estimates[:,0:2],
+        (scaling_matrix.dot(estimates.T).T + translation_vector).reshape(
+            estimates.shape[0], 1)))
+    np.savetxt("affine_adjusted_points.asc", affine_estimated_elevations,
+        delimiter=',')
 
 
 '''
@@ -310,6 +352,7 @@ def main():
     assert(ground_truth_indices[0].shape == (estimates.shape[0],))
     assert(ground_truth_indices[1].shape == (estimates.shape[0],))
 
+    # Evaluate various estimates against the ground truth.
     print 'Ground truth'
     show_RMSE(
         ground_truth_elevations[ground_truth_indices],
@@ -331,8 +374,12 @@ def main():
 
     print 'Full affine-fit estimated elevations'
     show_RMSE(
-        affine_estimated_elevations[:,2], ground_truth_elevations, ground_truth_indices)
-    np.savetxt('affine_fit_estimated_points.csv', affine_estimated_elevations, fmt = '%.8f', delimiter = ',')
+        affine_estimated_elevations, ground_truth_elevations, ground_truth_indices)
+
+    # Export data for rendering in Meshlab and Blender.
+    export_points_for_rendering(
+        estimates, ground_truth_elevations,
+        ground_truth_dataset, ground_truth_indices)
 
 
 if __name__ == '__main__':

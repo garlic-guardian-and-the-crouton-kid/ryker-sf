@@ -14,25 +14,35 @@ digital elevation map][] (DEM) with 1/3 arc-second resolution (approximately 10
 meters). Our point cloud reconstruction is binned at the resolution of the DEM.
 More information about these DEMs is available [here][USGS DEMs].
 
-Total RMSE for our reconstruction, compared against the 2013 DEM is 31.99
+Total RMSE for our reconstruction, compared against the 2013 DEM is 35.42
 meters.
 
 Some renderings of our reconstruction:
 
-![mesh_overhead.png][]
-![mesh_tilted.png][]
-![mesh_tilted_shallow.png][]
-![mesh_tilted_upside_down.png][]
+![estimates_with_ground_truth_overhead.png][]
 
-These renderings are more complete than they should be; our reconstruction is
-only a partial reconstruction of San Francisco, with many gaps where there are
-no overlaps between images in the dataset. The grid pattern of ridges and
-valleys in the rendered topography is an artifact of this; a more faithful
-rendering would delete those faces to leave holes where there is missing data.
+Estimates (silver) and ground truth (gold). North is up.
 
-Note also that a patch of the western shore of the city is missing from the
-rendering; this is likely captured in images 154 - 164, which are missing from
-our dataset.
+![estimates_with_ground_truth_side.png][]
+
+Estimates (silver) and ground truth (gold). Profile view.
+
+![estimates_with_ground_truth_tilted.png][]
+
+Estimates (silver) and ground truth (gold). Northeast is up.
+
+![estimates_with_ground_truth_overhead_2.png][]
+
+Estimates (silver) and ground truth (gold). North is up.
+
+![ground_truth_overhead.png][]
+
+Ground truth. North is up.
+
+In all renderings above, the ground truth dataset (DEM) is in gold, while our
+estimates are in silver. Note that the ground truth dataset is complete; we
+have cropped it here to show only those latlngs for which we have elevation
+estimates.
 
 See [Rendering](#rendering) below for the details of how this rendering was created.
 
@@ -40,10 +50,10 @@ Here's how our reconstruction stacks up against the ground truth:
 
 | Dataset                         |  [RMSE][] (meters) | Variance
 |---------------------------------|--------------------|---------
-| Ground truth elevation          | 0                  | 1499.25
-| Unscaled (raw) estimates        | 65.43              | 0.00011
-| Flat estimate (null hypothesis) | 42.73              | 0
-| Affine-aligned estimates        | 31.99              | 475.488
+| Ground truth elevation          | 0                  | 1462.82
+| Unscaled (raw) estimates        | 63.66              | 0.000024
+| Flat estimate (null hypothesis) | 41.55              | 0
+| Affine-aligned estimates        | 35.42              | 208.35
 
 The RMSE for the ground truth elevation is 0 by definition. The unscaled (raw)
 estimates are the raw values output from the reconstruction pipeline. These raw
@@ -211,19 +221,23 @@ The renderings of the reconstructed ground surface of San Francisco were created
 in [Meshlab][] and [Blender][]. To reproduce:
   1. Import the reconstructed points into Meshlab as a .asc file (plain list of
      x,y,z points)
-  2. Generate normals for the full set of ~80,000 points. Filters > Normals,
-     Curvature, and Orientation > Compute normals for point sets. Use the
-     default setting of 10 neighbors.
-  3. Smooth the normals: Filters > Point Set > Smooth normals on a point sets.
-     Again, the default settings of 10 neighbors are fine.
-  4. Reconstruct the meshed surface. Remeshing, Simplification, and
-     Reconstrution > Surface Reconstruction: Poisson (again, use the default
-     settings).
-  5. Export mesh to STL.
-  6. Open the STL file in Blender and experiment with different camera angles
+  2. Reconstruct the meshed surface. Remeshing, Simplification, and
+     Reconstrution > Surface Reconstruction: Ball-pivoting (again, use the
+     default settings). Note that ball-pivoting works better for our partial
+     reconstruction than Poisson reconstruction because it preserves the
+     original points along with the holes which indicate missing data. Note
+     that the ball-pivoting algorithm requires that data on the x, y, and z
+     axes have similar ranges.
+  3. Export mesh to STL.
+  4. Open the STL file in Blender and experiment with different camera angles
      to find angles which convey a qualitative sense of the topography of the
-     reconstruction. Take screenshots.
-  7. Done!
+     reconstruction. Use the numeric keys to rotate the camera by increments of
+     15 degrees about the x, y, and z axes. Color the dataset different colors
+     by selecting each dataset in turn and creating a new material for each
+     selection. Change the background color, if desired, by changing the theme
+     background color in File > User Preferences > Themes > 3D editor. Take
+     screenshots.
+  5. Done!
 
 [aerial photographs]: https://www.davidrumsey.com/luna/servlet/detail/RUMSEY~8~1~217219~5504219:Composite--1-164-San-Francisco-Aeri?sort=Pub_List_No_InitialSort%2CPub_Date%2CPub_List_No%2CSeries_No&qvq=q:ryker;sort:Pub_List_No_InitialSort%2CPub_Date%2CPub_List_No%2CSeries_No;lc:RUMSEY~8~1&mi=0&trs=166
 [David Rumsey Map Center]: https://www.davidrumsey.com/
@@ -240,8 +254,10 @@ in [Meshlab][] and [Blender][]. To reproduce:
 [Installing GDAL in a Python virtual environment]: https://gist.github.com/cspanring/5680334
 [Installing GDAL into a python virtualenv]: https://gis.stackexchange.com/questions/6360/installing-geos-proj-gdal-ogr-into-a-python-virtualenv-on-mac-os-x
 
-[mesh_overhead.png]: https://github.com/garlic-guardian-and-the-crouton-kid/ryker-sf/blob/master/results/mesh_overhead.png
-[mesh_tilted.png]: https://github.com/garlic-guardian-and-the-crouton-kid/ryker-sf/blob/master/results/mesh_tilted.png
-[mesh_tilted_shallow.png]: https://github.com/garlic-guardian-and-the-crouton-kid/ryker-sf/blob/master/results/mesh_tilted_shallow.png
-[mesh_tilted_upside_down.png]: https://github.com/garlic-guardian-and-the-crouton-kid/ryker-sf/blob/master/results/mesh_tilted_upside_down.png
+[estimates_with_ground_truth_overhead.png]: https://github.com/garlic-guardian-and-the-crouton-kid/ryker-sf/blob/master/results/estimates_with_ground_truth_overhead.png
+[estimates_with_ground_truth_tilted.png]: https://github.com/garlic-guardian-and-the-crouton-kid/ryker-sf/blob/master/results/estimates_with_ground_truth_tilted.png
+[estimates_with_ground_truth_side.png]: https://github.com/garlic-guardian-and-the-crouton-kid/ryker-sf/blob/master/results/estimates_with_ground_truth_side.png
+[ground_truth_overhead.png]: https://github.com/garlic-guardian-and-the-crouton-kid/ryker-sf/blob/master/results/ground_truth_overhead.png
+[estimates_with_ground_truth_overhead_2.png]: https://github.com/garlic-guardian-and-the-crouton-kid/ryker-sf/blob/master/results/estimates_with_ground_truth_overhead_2.png
+
 
